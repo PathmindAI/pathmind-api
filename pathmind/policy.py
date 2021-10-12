@@ -1,7 +1,9 @@
 import json
 import requests
+from typing import List, Union, Dict, Optional
 import numpy as np
 import tensorflow as tf
+from simulation import Simulation
 
 def server_action(simulation: Simulation) -> Dict[int, Union[float, np.ndarray]]:
     """Connect to an existing policy server and generate an action 

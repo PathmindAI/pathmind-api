@@ -1,6 +1,9 @@
-from .simulation import Simulation, LocalPolicy, RandomActions, Policy
+from simulation import Simulation
+from policy import server_action, local_action, random_action
 import os
 import yaml
+import pprint
+import numpy as np
 
 def write_observation_yaml(simulation: Simulation, file_path) -> None:
     obs_name_list = list(simulation.get_observation(0).keys())
@@ -9,27 +12,47 @@ def write_observation_yaml(simulation: Simulation, file_path) -> None:
         f.write(yaml.dump(obs))
 
 def rollout_episodes(simulation, policy_file=None, server_url=None, debug_mode=True, episodes=1):
-    verbose = False if episodes > 1 else verbose
+    pp = pprint.PrettyPrinter(indent=4)
+
+    debug_mode = False if episodes > 1 else debug_mode
     done = False
-    self.reset()
+    simulation.reset()
+    agents = range(simulation.number_of_agents())
+
+
     step = 0
     while True:
         if debug_mode:
-            print(f"initial observation : {self.get_observation()}")
+            print("----------------------------")
+            print(f"step : {step + 1}")
+            print("----------------------------")
+            pp.pprint({"initial observations": {f"agent_{agent_id}": simulation.get_observation(agent_id) for agent_id in agents}})
 
         if policy_file:
-            action = local_action(simulation, policy_file)
+            actions = local_action(simulation, policy_file)
         elif server_url:
-            action = server_action(simulation, server_url)
+            actions = server_action(simulation, server_url)
         else: #random action
-            action = np.random.randint(self.action_space.choices, size=self.action_space.size)
+            choices = simulation.action_space(0).choices
+            size = simulation.action_space(0).size
+            actions = np.random.randint(choices, size=(len(agents), size))
 
-        self.set_action(action)
-        self.step()
+        simulation.action = actions
+
+        simulation.step()
+        dones = {f"agent_{agent_id}": simulation.is_done(agent_id) for agent_id in agents}
         if debug_mode:
-            print(f"action : {self.action}")
-            print(f"reward : {self.get_reward()}")
-            print(f"next observation : {self.get_observation()}")
+            pp.pprint({"actions": {f"agent_{agent_id}": simulation.action[agent_id] for agent_id in agents}})
+            pp.pprint({"rewards": {f"agent_{agent_id}": simulation.get_reward(agent_id) for agent_id in agents}})
+            pp.pprint({"next observations": {f"agent_{agent_id}": simulation.get_observation(agent_id) for agent_id in agents}})
+            pp.pprint({"done": dones})
         step += 1
-        if self.is_done(0):
+
+
+        if all(dones.values()):
             break    
+
+if __name__=="__main__":
+    from mouse_env_pathmind import MouseAndCheese
+    env = MouseAndCheese()
+    rollout_episodes(env)
