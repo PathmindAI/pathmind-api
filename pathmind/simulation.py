@@ -92,15 +92,14 @@ class Simulation:
         specify any metrics, we simply use all provided observations for your agents."""
         return None
 
-
-class PolicyServer:
+class Policy:
     """Connect to an existing policy server for your simulation."""
 
     def __init__(self, url, api_key):
         self.url = url + "/predict/"
         self.headers = {'access_token': api_key}
 
-    def get_action(self, simulation: Simulation) -> Dict[int, Union[float, np.ndarray]]:
+    def get_server_action(self, simulation: Simulation) -> Dict[int, Union[float, np.ndarray]]:
         action = {}
         for i in range(simulation.number_of_agents()):
             obs: dict = simulation.get_observation(i)
@@ -110,5 +109,37 @@ class PolicyServer:
             action[i] = np.asarray(json.loads(content).get("actions"))
         return action
 
+    def get_local_action(self, policy_file):
+        is_training_tensor = tf.constant(False, dtype=tf.bool)
+        prev_reward_tensor = tf.constant([0], dtype=tf.float32)
+        prev_action_tensor = tf.constant([0], dtype=tf.int64)
+        seq_lens_tensor = tf.constant([0], dtype=tf.int32)
+
+        tf_trackable = tf.saved_model.load('./saved_model')
+        self.model = tf_trackable.signatures.get("serving_default")
+
+
+        observation = np.asarray(self.get_observation()).reshape((1, 5))
+        inputs = tf.convert_to_tensor(np.asarray(observation), dtype=tf.float32, name='observations')
+
+        result = self.model(
+            observations=inputs,
+            is_training=self.is_training_tensor,
+            seq_lens=self.seq_lens_tensor,
+            prev_action=self.prev_action_tensor,
+            prev_reward=self.prev_reward_tensor
+        )
+
+        action_keys = [k for k in result.keys() if "actions_" in k]
+        action_tensor = result.get(action_keys[0])
+
+        numpy_tensor = action_tensor.numpy()
+
+       ##TODO: is the action necessarily an int?
+       #action = int(numpy_tensor[0])
+        
+
+    def random_action:
+        pass
 
 
