@@ -52,6 +52,12 @@ def rollout_episodes(simulation, policy_file=None, server_url=None, debug_mode=T
                 break    
 
 if __name__=="__main__":
-    from pathmind.examples.mouse_env_pathmind import MouseAndCheese
-    env = MouseAndCheese()
+#   #Single Mouse Test
+#    from pathmind.examples.mouse_env_pathmind import MouseAndCheese
+#    env = MouseAndCheese()
+#    rollout_episodes(env)
+
+    #Multi-mouse test
+    from pathmind.examples.multi_mouse_env_pathmind import MultiMouseAndCheese
+    env = MultiMouseAndCheese()
     rollout_episodes(env)
