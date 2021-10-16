@@ -15,6 +15,7 @@ class Discrete:
     and a Discrete(3, 2) represents vectors of length two, each with 3 choices, so
     a valid choice would be [0, 1] or [2, 2].
     """
+
     def __init__(self, choices: int, size: int = 1):
         self.choices = choices
         self.size = size
@@ -28,7 +29,10 @@ class Continuous:
     the interval [0, 1] each, whereas a Continuous([3, 2]) accepts values of
     shape (3,2).
     """
-    def __init__(self, shape: List[int], low: float = -math.inf, high: float = math.inf):
+
+    def __init__(
+        self, shape: List[int], low: float = -math.inf, high: float = math.inf
+    ):
         self.shape = shape
         self.low = low
         self.high = high
@@ -44,6 +48,7 @@ class Simulation:
     a numpy array with specified shape. You use "action" to apply the next actions
     to your agents in the "step" function.
     """
+
     action: Dict[int, Union[float, np.ndarray]] = None
 
     def __init__(self, *args, **kwargs):
@@ -98,17 +103,16 @@ class PolicyServer:
 
     def __init__(self, url, api_key):
         self.url = url + "/predict/"
-        self.headers = {'access_token': api_key}
+        self.headers = {"access-token": api_key}
 
     def get_action(self, simulation: Simulation) -> Dict[int, Union[float, np.ndarray]]:
         action = {}
         for i in range(simulation.number_of_agents()):
             obs: dict = simulation.get_observation(i)
             import json
-            data = json.dumps(obs)
-            content = requests.post(url=self.url, data=data, headers=self.headers).content
+
+            content = requests.post(
+                url=self.url, json=obs, headers=self.headers
+            ).content
             action[i] = np.asarray(json.loads(content).get("actions"))
         return action
-
-
-
