@@ -3,7 +3,8 @@ from policy import Policy
 import os
 import yaml
 import pprint
-
+from typing import Optional
+import time
 
 def write_observation_yaml(simulation: Simulation, file_path) -> None:
     obs_name_list = list(simulation.get_observation(0).keys())
@@ -12,7 +13,7 @@ def write_observation_yaml(simulation: Simulation, file_path) -> None:
         f.write(yaml.dump(obs))
 
 
-def rollout_episodes(simulation: Simulation, policy: Policy, episodes=1):
+def rollout_episodes(simulation: Simulation, policy: Policy, episodes: int = 1, sleep: Optional[int] = None) -> None:
     pp = pprint.PrettyPrinter(indent=4)
     # Only debug single episodes
     debug_mode = True if episodes == 1 else False
@@ -24,6 +25,9 @@ def rollout_episodes(simulation: Simulation, policy: Policy, episodes=1):
         pp.pprint(f"Episode : {episode + 1}")
         step = 0
         while not done:
+            if sleep:
+                # Optionally sleep for "sleep" seconds for easier debugging.
+                time.sleep(sleep)
             if debug_mode:
                 pp.pprint("----------------------------")
                 pp.pprint(f"Step : {step + 1}")
