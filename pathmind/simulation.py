@@ -1,7 +1,6 @@
 from typing import List, Union, Dict, Optional
 import math
 import numpy as np
-import requests
 
 
 __all__ = ["Discrete", "Continuous", "Simulation"]
@@ -15,6 +14,7 @@ class Discrete:
     and a Discrete(3, 2) represents vectors of length two, each with 3 choices, so
     a valid choice would be [0, 1] or [2, 2].
     """
+
     def __init__(self, choices: int, size: int = 1):
         self.choices = choices
         self.size = size
@@ -28,7 +28,10 @@ class Continuous:
     the interval [0, 1] each, whereas a Continuous([3, 2]) accepts values of
     shape (3,2).
     """
-    def __init__(self, shape: List[int], low: float = -math.inf, high: float = math.inf):
+
+    def __init__(
+        self, shape: List[int], low: float = -math.inf, high: float = math.inf
+    ):
         self.shape = shape
         self.low = low
         self.high = high
@@ -44,6 +47,7 @@ class Simulation:
     a numpy array with specified shape. You use "action" to apply the next actions
     to your agents in the "step" function.
     """
+
     action: Dict[int, Union[float, np.ndarray]] = None
 
     def __init__(self, *args, **kwargs):
@@ -92,4 +96,3 @@ class Simulation:
         """Return a list of numerical values you want to track. If you don't
         specify any metrics, we simply use all provided observations for your agents."""
         return None
-

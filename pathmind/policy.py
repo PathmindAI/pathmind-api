@@ -1,54 +1,101 @@
-import json
 import requests
-from typing import List, Union, Dict, Optional
+from typing import Dict
 import numpy as np
 import tensorflow as tf
-from simulation import Simulation
+from simulation import Simulation, Discrete
+
+__all__ = ["Server", "Local", "Random"]
 
 
-def server_action(simulation: Simulation) -> Dict[int, Union[float, np.ndarray]]:
-    """Connect to an existing policy server and generate an action 
-    for your simulation."""
-    headers = {'access_token': api_key}
-    actions = {}
-    for i in range(simulation.number_of_agents()):
-        obs: dict = simulation.get_observation(i)
-        data = json.dumps(obs)
-        content = requests.post(url=url+"/predict/", data=data, headers=headers).content
-        actions[i] = np.asarray(json.loads(content).get("actions"))
-    return actions
+class Policy:
+    """A Policy returns actions for each agent in the current state of a Simulation."""
 
-def local_action(simulation, policy_file):
-    """Compute an action by passing observations through a downloaded
-    policy_file.zip"""
-    is_training_tensor = tf.constant(False, dtype=tf.bool)
-    prev_reward_tensor = tf.constant([0], dtype=tf.float32)
-    prev_action_tensor = tf.constant([0], dtype=tf.int64)
-    seq_lens_tensor = tf.constant([0], dtype=tf.int32)
+    def get_actions(self, simulation: Simulation) -> Dict[int, np.ndarray]:
+        raise NotImplementedError
 
-    tf_trackable = tf.saved_model.load('./saved_model')
-    self.model = tf_trackable.signatures.get("serving_default")
 
-    observation = np.asarray(self.get_observation()).reshape((1, -1))
-    inputs = tf.convert_to_tensor(np.asarray(observation), dtype=tf.float32, name='observations')
+class Server(Policy):
+    """Connect to an existing policy server for your simulation."""
 
-    result = self.model(
-        observations=inputs,
-        is_training=self.is_training_tensor,
-        seq_lens=self.seq_lens_tensor,
-        prev_action=self.prev_action_tensor,
-        prev_reward=self.prev_reward_tensor
-    )
+    def __init__(self, url, api_key):
+        self.url = url + "/predict/"
+        self.headers = {"access-token": api_key}
 
-    action_keys = [k for k in result.keys() if "actions_" in k]
-    action_tensor = result.get(action_keys[0])
+    def get_actions(self, simulation: Simulation) -> Dict[int, np.ndarray]:
+        actions = {}
+        for i in range(simulation.number_of_agents()):
+            obs: dict = simulation.get_observation(i)
+            import json
 
-    numpy_tensor = action_tensor.numpy()[0]
+            content = requests.post(
+                url=self.url, json=obs, headers=self.headers
+            ).content
+            actions[i] = np.asarray(json.loads(content).get("actions"))
+        return actions
 
-   ##TODO: is the action necessarily an int?
-   #action = int(numpy_tensor[0])
-    
 
-def random_action(simulation):
-    """Generate a random action independent of the observation"""
-    action = np.random.randint(simulation.action_space.choices, size=simulation.action_space.size) 
+class Local(Policy):
+    def __init__(self, model_file="./saved_model", is_tuple=False, is_discrete=True):
+        self.is_training_tensor = tf.constant(False, dtype=tf.bool)
+        self.prev_reward_tensor = tf.constant([0], dtype=tf.float32)
+        self.prev_action_tensor = tf.constant([0], dtype=tf.int64)
+        self.seq_lens_tensor = tf.constant([0], dtype=tf.int32)
+
+        tf_trackable = tf.saved_model.load(model_file)
+        self.model = tf_trackable.signatures.get("serving_default")
+        self.is_tuple = is_tuple
+        self.is_discrete = is_discrete
+
+    def get_actions(self, simulation: Simulation) -> Dict[int, np.ndarray]:
+        """Compute an action by passing observations through a downloaded
+        policy_file.zip"""
+        action_type = int if self.is_discrete else float
+
+        actions = {}
+        for i in range(simulation.number_of_agents()):
+            obs: dict = simulation.get_observation(i)
+            observation = np.asarray(obs).reshape((1, -1))
+            inputs = tf.convert_to_tensor(
+                np.asarray(observation), dtype=tf.float32, name="observations"
+            )
+
+            result = self.model(
+                observations=inputs,
+                is_training=self.is_training_tensor,
+                seq_lens=self.seq_lens_tensor,
+                prev_action=self.prev_action_tensor,
+                prev_reward=self.prev_reward_tensor,
+            )
+
+            action_keys = [k for k in result.keys() if "actions_" in k]
+
+            if not self.is_tuple:
+                action_tensor = result.get(action_keys[0])
+                numpy_tensor = action_tensor.numpy()
+                plain_actions = action_type(numpy_tensor[0])
+            else:
+                numpy_tensors = [result.get(k).numpy() for k in action_keys]
+                plain_actions = [action_type(x) for x in numpy_tensors]
+
+            actions[i] = np.asarray(plain_actions)
+
+        return actions
+
+
+class Random(Policy):
+    def get_actions(self, simulation: Simulation):
+        """Generate a random action independent of the observation"""
+        actions = {}
+        for i in range(simulation.number_of_agents()):
+            action_space = simulation.action_space(i)
+            if isinstance(action_space, Discrete):
+                action = np.random.randint(action_space.choices, size=action_space.size)
+            else:
+                action = (
+                    np.random.rand(*action_space.shape)
+                    * (action_space.high - action_space.low)
+                    + action_space.low
+                )
+            actions[i] = action
+
+        return actions

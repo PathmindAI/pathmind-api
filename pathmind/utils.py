@@ -1,9 +1,8 @@
 from simulation import Simulation
-from policy import server_action, local_action, random_action
+from policy import Policy
 import os
 import yaml
 import pprint
-import numpy as np
 
 
 def write_observation_yaml(simulation: Simulation, file_path) -> None:
@@ -13,56 +12,64 @@ def write_observation_yaml(simulation: Simulation, file_path) -> None:
         f.write(yaml.dump(obs))
 
 
-def rollout_episodes(simulation, policy_file=None, server_url=None, debug_mode=True, episodes=1):
+def rollout_episodes(simulation: Simulation, policy: Policy, episodes=1):
     pp = pprint.PrettyPrinter(indent=4)
-    debug_mode = False if episodes > 1 else debug_mode
+    # Only debug single episodes
+    debug_mode = True if episodes == 1 else False
     done = False
     simulation.reset()
     agents = range(simulation.number_of_agents())
 
     for episode in range(episodes):
-        print(f"Episode : {episode + 1}")
+        pp.pprint(f"Episode : {episode + 1}")
         step = 0
-        while True:
+        while not done:
             if debug_mode:
-                print("----------------------------")
-                print(f"Step : {step + 1}")
-                print("----------------------------")
-                pp.pprint({"Initial observations": {f"agent_{agent_id}": simulation.get_observation(agent_id) for agent_id in agents}})
+                pp.pprint("----------------------------")
+                pp.pprint(f"Step : {step + 1}")
+                pp.pprint("----------------------------")
+                pp.pprint(
+                    {
+                        "Initial observations": {
+                            f"agent_{agent_id}": simulation.get_observation(agent_id)
+                            for agent_id in agents
+                        }
+                    }
+                )
 
-            if policy_file:
-                actions = local_action(simulation, policy_file)
-            elif server_url:
-                actions = server_action(simulation, server_url)
-            else: #random action
-                # TODO actually use random_action...
-                choices = simulation.action_space(0).choices
-                size = simulation.action_space(0).size
-                actions = np.random.randint(choices, size=(len(agents), size))
-
+            actions = policy.get_actions(simulation)
             simulation.action = actions
 
             simulation.step()
-            dones = {f"agent_{agent_id}": simulation.is_done(agent_id) for agent_id in agents}
+            dones = {
+                f"agent_{agent_id}": simulation.is_done(agent_id) for agent_id in agents
+            }
             if debug_mode:
-                pp.pprint({"Actions": {f"agent_{agent_id}": simulation.action[agent_id] for agent_id in agents}})
-                pp.pprint({"Rewards": {f"agent_{agent_id}": simulation.get_reward(agent_id) for agent_id in agents}})
-                pp.pprint({"Next observations": {f"agent_{agent_id}": simulation.get_observation(agent_id) for agent_id in agents}})
+                pp.pprint(
+                    {
+                        "Actions": {
+                            f"agent_{agent_id}": simulation.action[agent_id]
+                            for agent_id in agents
+                        }
+                    }
+                )
+                pp.pprint(
+                    {
+                        "Rewards": {
+                            f"agent_{agent_id}": simulation.get_reward(agent_id)
+                            for agent_id in agents
+                        }
+                    }
+                )
+                pp.pprint(
+                    {
+                        "Next observations": {
+                            f"agent_{agent_id}": simulation.get_observation(agent_id)
+                            for agent_id in agents
+                        }
+                    }
+                )
                 pp.pprint({"Done": dones})
             step += 1
 
-            if all(dones.values()):
-                break    
-
-
-if __name__=="__main__":
-#   #Single Mouse Test
-#    from pathmind.examples.mouse_env_pathmind import MouseAndCheese
-#    env = MouseAndCheese()
-#    rollout_episodes(env)
-
-    #Multi-mouse test
-    # TODO this is not a valid Python package
-    from pathmind.examples.multi_mouse_env_pathmind import MultiMouseAndCheese
-    env = MultiMouseAndCheese()
-    rollout_episodes(env)
+            done = all(dones.values())
