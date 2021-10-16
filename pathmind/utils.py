@@ -5,11 +5,13 @@ import yaml
 import pprint
 import numpy as np
 
+
 def write_observation_yaml(simulation: Simulation, file_path) -> None:
     obs_name_list = list(simulation.get_observation(0).keys())
     obs = {"observations": obs_name_list}
     with open(os.path.join(file_path, "obs.yaml"), "w") as f:
         f.write(yaml.dump(obs))
+
 
 def rollout_episodes(simulation, policy_file=None, server_url=None, debug_mode=True, episodes=1):
     pp = pprint.PrettyPrinter(indent=4)
@@ -33,6 +35,7 @@ def rollout_episodes(simulation, policy_file=None, server_url=None, debug_mode=T
             elif server_url:
                 actions = server_action(simulation, server_url)
             else: #random action
+                # TODO actually use random_action...
                 choices = simulation.action_space(0).choices
                 size = simulation.action_space(0).size
                 actions = np.random.randint(choices, size=(len(agents), size))
@@ -51,6 +54,7 @@ def rollout_episodes(simulation, policy_file=None, server_url=None, debug_mode=T
             if all(dones.values()):
                 break    
 
+
 if __name__=="__main__":
 #   #Single Mouse Test
 #    from pathmind.examples.mouse_env_pathmind import MouseAndCheese
@@ -58,6 +62,7 @@ if __name__=="__main__":
 #    rollout_episodes(env)
 
     #Multi-mouse test
+    # TODO this is not a valid Python package
     from pathmind.examples.multi_mouse_env_pathmind import MultiMouseAndCheese
     env = MultiMouseAndCheese()
     rollout_episodes(env)
