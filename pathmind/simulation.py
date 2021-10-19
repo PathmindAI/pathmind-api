@@ -86,9 +86,9 @@ class Simulation:
         """Reset your simulation parameters."""
         raise NotImplementedError
 
-    def get_metrics(self, agent_id: int) -> Dict[str, float]:
-        """Get simulation metrics as a dictionary, given the current simulation state,
-        per agent. Metrics are the foundation of creating reward functions in Pathmind."""
+    def get_reward(self, agent_id: int) -> Dict[str, float]:
+        """Get reward terms as a dictionary, given the current simulation state
+        per agent, which are the foundation of creating reward functions in Pathmind."""
         raise NotImplementedError
 
     def get_observation(self, agent_id: int) -> Dict[str, Union[float, List[float]]]:
