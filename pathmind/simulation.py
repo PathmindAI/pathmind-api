@@ -1,3 +1,11 @@
+import os
+import yaml
+import shutil
+import subprocess
+
+import time
+from prettytable import PrettyTable
+import csv
 from typing import List, Union, Dict, Optional
 import math
 import numpy as np
@@ -78,9 +86,9 @@ class Simulation:
         """Reset your simulation parameters."""
         raise NotImplementedError
 
-    def get_reward(self, agent_id: int) -> Dict[str, float]:
-        """Get the reward terms of the simulation as a dictionary, given the current simulation state,
-        per agent."""
+    def get_metrics(self, agent_id: int) -> Dict[str, float]:
+        """Get simulation metrics as a dictionary, given the current simulation state,
+        per agent. Metrics are the foundation of creating reward functions in Pathmind."""
         raise NotImplementedError
 
     def get_observation(self, agent_id: int) -> Dict[str, Union[float, List[float]]]:
@@ -92,7 +100,123 @@ class Simulation:
         """Has this agent reached its target?"""
         raise NotImplementedError
 
-    def get_metrics(self, agent_id: int) -> Optional[List[float]]:
-        """Return a list of numerical values you want to track. If you don't
-        specify any metrics, we simply use all provided observations for your agents."""
-        return None
+    def run(self, policy, out_csv: Optional[str] = None,
+            num_episodes: int = 1, sleep: Optional[int] = None) -> None:
+        """
+        Runs a simulation with a given policy. In Reinforcement Learning terms this creates a
+        "rollout" of the policy over the specified number of episodes to run in the simulation.
+
+        :param policy: A Pathmind Policy (local, server, or random)
+        :param out_csv: If you specify an output CSV file, results will be stored there for debugging purposes.
+        :param num_episodes: the number of episodes to run rollouts for.
+        :param sleep: Optionally sleep for "sleep" seconds to make debugging easier.
+        """
+        # Only debug single episodes
+        debug_mode = True if num_episodes == 1 else False
+        done = False
+        self.reset()
+        agents = range(self.number_of_agents())
+        table = PrettyTable()
+        table.field_names = ["Episode", "Step"] + [f"observations_{i}" for i in agents] + \
+                            [f"actions_{i}" for i in agents] + [f"metrics_{i}" for i in agents] + \
+                            [f"done_{i}" for i in agents]
+        print(table)
+
+        for episode in range(num_episodes):
+            step = 0
+            while not done:
+                row = [episode, step]
+                if sleep:
+                    # Optionally sleep for "sleep" seconds for easier debugging.
+                    time.sleep(sleep)
+
+                # Observations are "initial", i.e. before the action
+                row += [self.get_observation(agent_id) for agent_id in agents]
+
+                actions = policy.get_actions(self)
+                self.action = actions
+
+                self.step()
+                dones = {f"agent_{agent_id}": self.is_done(agent_id) for agent_id in agents}
+
+                row += [self.action[agent_id] for agent_id in agents]
+                row += [self.get_metrics(agent_id) for agent_id in agents]
+                row += [d for d in dones.values()]
+                table.add_row(row)
+
+                step += 1
+                done = all(dones.values())
+
+                if debug_mode:
+                    print(row)
+
+            if debug_mode:
+                print(table)
+
+            table_string = table.get_string()
+            result = [tuple(filter(None, map(str.strip, splitline))) for line in table_string.splitlines()
+                      for splitline in [line.split("|")] if len(splitline) > 1]
+
+            if out_csv:
+                with open(out_csv, 'w') as out:
+                    writer = csv.writer(out)
+                    writer.writerows(result)
+
+    def train(self, observation_yaml=None):
+        """
+        :param observation_yaml:
+        """
+
+        env_name = str(self.__class__).split("'")[1]
+        base_folder = env_name.split(".")[0]
+        multi_agent = self.number_of_agents() > 1
+
+        if not observation_yaml:
+            write_observation_yaml(self, base_folder)
+            obs_yaml = os.path.join(base_folder, "obs.yaml")
+        else:
+            obs_yaml = observation_yaml
+
+        token = os.environ.get("PATHMIND_TOKEN")
+        if not token:
+            raise ValueError("No Pathmind API token specified, "
+                             "please export 'PATHMIND_TOKEN' as environment variable.")
+
+        shutil.make_archive(base_folder, 'zip', base_folder)
+
+        cmd = f"""curl -i -XPOST \
+              -H "X-PM-API-TOKEN: {token}" \
+              -F 'file=@{base_folder}.zip' \
+              -F 'is_pathmind_simulation=true' \
+              -F 'env={env_name}' \
+              -F 'start=true' \
+              -F 'multi_agent={multi_agent}' \
+              -F 'obs_selection={obs_yaml}' \
+              https://api.pathmind.com/py/upload
+            """
+
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
+        if b"201" not in result.stdout:
+            print(result.stdout)
+            raise Exception("Could not start training, check the message above.")
+
+        for line in result.stdout.split(b"\r\n"):
+            if b"location" in line:
+                location = line.split(b": ")[-1]
+                print(f">>> See your Pathmind experiment at: \n\t{location.decode()}")
+
+        return result
+
+
+def write_observation_yaml(simulation: Simulation, folder) -> None:
+    """Writes a YAML file with observation names that will be used by
+    the training program to select which observation values are used for
+    training.
+
+    :param simulation: A Pathmind Simulation
+    :param folder: the local folder which should contain the "obs.yaml" file
+    """
+    obs_name_list = list(simulation.get_observation(0).keys())
+    obs = {"observations": obs_name_list}
+    with open(os.path.join(folder, "obs.yaml"), "w") as f:
+        f.write(yaml.dump(obs))

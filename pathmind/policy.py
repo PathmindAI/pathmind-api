@@ -5,9 +5,6 @@ from typing import Dict
 import numpy as np
 import tensorflow as tf
 
-# tf.compat.v1.enable_eager_execution(
-#     config=None, device_policy=None, execution_mode=None
-# )
 
 __all__ = ["Server", "Local", "Random"]
 
@@ -20,7 +17,7 @@ class Policy:
 
 
 class Server(Policy):
-    """Connect to an existing policy server for your simulation."""
+    """Connect to an existing Pathmind policy server for your simulation."""
 
     def __init__(self, url, api_key):
         self.url = url + "/predict/"
@@ -40,6 +37,8 @@ class Server(Policy):
 
 
 class Local(Policy):
+    """Load a policy from a locally stored model file and use it to predict actions."""
+
     def __init__(self, model_file="./saved_model", is_tuple=False, is_discrete=True):
         self.is_training_tensor = tf.constant(False, dtype=tf.bool)
         self.prev_reward_tensor = tf.constant([0], dtype=tf.float32)
@@ -91,6 +90,8 @@ class Local(Policy):
 
 
 class Random(Policy):
+    """Generate random actions for a simulaton."""
+
     def get_actions(self, simulation: Simulation):
         """Generate a random action independent of the observation"""
         actions = {}
