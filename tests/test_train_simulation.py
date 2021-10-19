@@ -11,4 +11,4 @@ def test_training():
 # def test_multi_training():
 #
 #     simulation = MultiMouseAndCheese()
-#     simulation.train()
+#     simulation.train("./")

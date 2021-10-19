@@ -168,7 +168,6 @@ class Simulation:
         :param observation_yaml:
         """
 
-        base_folder = os.path.abspath(base_folder)
         env_name = str(self.__class__).split("'")[1]
         # base_folder = env_name.split(".")[0]
         multi_agent = self.number_of_agents() > 1
@@ -189,11 +188,11 @@ class Simulation:
         cmd = f"""curl -i -XPOST \
               -H "X-PM-API-TOKEN: {token}" \
               -F 'file=@training.zip' \
-              -F 'is_pathmind_simulation=true' \
+              -F 'isPathmindSimulation=true' \
               -F 'env={env_name}' \
               -F 'start=true' \
-              -F 'multi_agent={multi_agent}' \
-              -F 'obs_selection={obs_yaml}' \
+              -F 'multiAgent={multi_agent}' \
+              -F 'obsSelection={obs_yaml}' \
               https://api.pathmind.com/py/upload
             """
 
