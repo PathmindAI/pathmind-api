@@ -1,15 +1,14 @@
+import csv
+import math
 import os
-import yaml
 import shutil
 import subprocess
-
 import time
-from prettytable import PrettyTable
-import csv
-from typing import List, Union, Dict, Optional
-import math
-import numpy as np
+from typing import Dict, List, Optional, Union
 
+import numpy as np
+import yaml
+from prettytable import PrettyTable
 
 __all__ = ["Discrete", "Continuous", "Simulation"]
 
@@ -60,7 +59,6 @@ class Simulation:
 
     def __init__(self, *args, **kwargs):
         """Set any properties and initial states needed for your simulation."""
-        pass
 
     def set_action(self, action: Dict[int, Union[float, np.ndarray]]):
         """Use this to test your own decisions, or to integrate with Pathmind's Policy Server.
@@ -100,8 +98,13 @@ class Simulation:
         """Has this agent reached its target?"""
         raise NotImplementedError
 
-    def run(self, policy, out_csv: Optional[str] = None,
-            num_episodes: int = 1, sleep: Optional[int] = None) -> None:
+    def run(
+        self,
+        policy,
+        out_csv: Optional[str] = None,
+        num_episodes: int = 1,
+        sleep: Optional[int] = None,
+    ) -> None:
         """
         Runs a simulation with a given policy. In Reinforcement Learning terms this creates a
         "rollout" of the policy over the specified number of episodes to run in the simulation.
@@ -117,9 +120,13 @@ class Simulation:
         self.reset()
         agents = range(self.number_of_agents())
         table = PrettyTable()
-        table.field_names = ["Episode", "Step"] + [f"observations_{i}" for i in agents] + \
-                            [f"actions_{i}" for i in agents] + [f"metrics_{i}" for i in agents] + \
-                            [f"done_{i}" for i in agents]
+        table.field_names = (
+            ["Episode", "Step"]
+            + [f"observations_{i}" for i in agents]
+            + [f"actions_{i}" for i in agents]
+            + [f"metrics_{i}" for i in agents]
+            + [f"done_{i}" for i in agents]
+        )
         print(table)
 
         for episode in range(num_episodes):
@@ -137,7 +144,9 @@ class Simulation:
                 self.action = actions
 
                 self.step()
-                dones = {f"agent_{agent_id}": self.is_done(agent_id) for agent_id in agents}
+                dones = {
+                    f"agent_{agent_id}": self.is_done(agent_id) for agent_id in agents
+                }
 
                 row += [self.action[agent_id] for agent_id in agents]
                 row += [self.get_metrics(agent_id) for agent_id in agents]
@@ -154,11 +163,15 @@ class Simulation:
                 print(table)
 
             table_string = table.get_string()
-            result = [tuple(filter(None, map(str.strip, splitline))) for line in table_string.splitlines()
-                      for splitline in [line.split("|")] if len(splitline) > 1]
+            result = [
+                tuple(filter(None, map(str.strip, splitline)))
+                for line in table_string.splitlines()
+                for splitline in [line.split("|")]
+                if len(splitline) > 1
+            ]
 
             if out_csv:
-                with open(out_csv, 'w') as out:
+                with open(out_csv, "w") as out:
                     writer = csv.writer(out)
                     writer.writerows(result)
 
@@ -180,10 +193,12 @@ class Simulation:
 
         token = os.environ.get("PATHMIND_TOKEN")
         if not token:
-            raise ValueError("No Pathmind API token specified, "
-                             "please export 'PATHMIND_TOKEN' as environment variable.")
+            raise ValueError(
+                "No Pathmind API token specified, "
+                "please export 'PATHMIND_TOKEN' as environment variable."
+            )
 
-        shutil.make_archive("training", 'zip', base_folder)
+        shutil.make_archive("training", "zip", base_folder)
 
         cmd = f"""curl -i -XPOST \
               -H "X-PM-API-TOKEN: {token}" \

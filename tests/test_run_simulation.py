@@ -1,9 +1,10 @@
+import os
+import pathlib
+
 from examples.mouse.mouse_env_pathmind import MouseAndCheese
 from examples.mouse.multi_mouse_env_pathmind import MultiMouseAndCheese
 
 from pathmind.policy import Local, Random
-import pathlib
-import os
 
 PATH = pathlib.Path(__file__).parent.resolve()
 

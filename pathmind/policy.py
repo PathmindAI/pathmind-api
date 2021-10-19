@@ -1,10 +1,10 @@
-from pathmind.simulation import Simulation, Discrete
-
-import requests
 from typing import Dict
+
 import numpy as np
+import requests
 import tensorflow as tf
 
+from pathmind.simulation import Discrete, Simulation
 
 __all__ = ["Server", "Local", "Random"]
 
@@ -63,7 +63,9 @@ class Local(Policy):
             obs: dict = simulation.get_observation(i)
             obs_values: list = [*obs.values()]
             observation = np.asarray(obs_values).reshape((1, -1))
-            tensors = tf.convert_to_tensor(observation, dtype=tf.float32, name="observations")
+            tensors = tf.convert_to_tensor(
+                observation, dtype=tf.float32, name="observations"
+            )
 
             result = self.model(
                 observations=tensors,

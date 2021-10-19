@@ -1,7 +1,7 @@
 observations:
-- mouse_row
-- mouse_col
-- distance_to_cheese_row
-- distance_to_cheese_col
-- cheese_row
-- cheese_col
+  - mouse_row
+  - mouse_col
+  - distance_to_cheese_row
+  - distance_to_cheese_col
+  - cheese_row
+  - cheese_col
