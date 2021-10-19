@@ -1,7 +1,7 @@
 from examples.mouse.mouse_env_pathmind import MouseAndCheese
 from examples.mouse.multi_mouse_env_pathmind import MultiMouseAndCheese
 
-from pathmind.utils import rollout_episodes
+from pathmind.evaluation import rollout_episodes
 from pathmind.policy import Local, Random
 import pathlib
 import os

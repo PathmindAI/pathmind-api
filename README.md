@@ -30,4 +30,27 @@ Simply implement the `Simulation` interface provided in `simulation.py`, see the
 - [ ] better describe how things work (run through example, incl. obs selection etc.)
 - [ ] explain how to run training on Pathmind
 - [ ] explain how to use with Policy server
-- [ ] open source this project
+
+
+```shell
+curl -i -XPOST \
+  -H "X-PM-API-TOKEN: <PM_TOKEN>" \
+  -F 'file=@examples.zip' \
+  -F 'is_pathmind_simulation=TRUE' \
+  -F 'env=examples.mouse.mouse_env_pathmind.MouseAndCheese' \
+  -F 'start=TRUE' \
+  https://api.pathmind.com/py/upload
+```
+
+```shell
+curl -i -XPOST \
+  -H "X-PM-API-TOKEN: <PM_TOKEN>" \
+  -F 'file=@examples.zip' \
+  -F 'multi_agent=TRUE' \
+  -F 'is_pathmind_simulation=TRUE' \
+  -F 'obs_selection=examples/mouse/obs.yaml' \
+  -F 'rew_fct_name=examples.mouse.reward.reward_function' \
+  -F 'env=examples.mouse.multi_mouse_env_pathmind.MultiMouseAndCheese' \
+  -F 'start=TRUE' \
+  https://api.pathmind.com/py/upload
+```
