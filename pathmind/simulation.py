@@ -162,13 +162,15 @@ class Simulation:
                     writer = csv.writer(out)
                     writer.writerows(result)
 
-    def train(self, observation_yaml=None):
+    def train(self, base_folder: str, observation_yaml: str = None):
         """
+        :param base_folder the path to your base folder containing all
         :param observation_yaml:
         """
 
+        base_folder = os.path.abspath(base_folder)
         env_name = str(self.__class__).split("'")[1]
-        base_folder = env_name.split(".")[0]
+        # base_folder = env_name.split(".")[0]
         multi_agent = self.number_of_agents() > 1
 
         if not observation_yaml:
@@ -182,11 +184,11 @@ class Simulation:
             raise ValueError("No Pathmind API token specified, "
                              "please export 'PATHMIND_TOKEN' as environment variable.")
 
-        shutil.make_archive(base_folder, 'zip', base_folder)
+        shutil.make_archive("training", 'zip', base_folder)
 
         cmd = f"""curl -i -XPOST \
               -H "X-PM-API-TOKEN: {token}" \
-              -F 'file=@{base_folder}.zip' \
+              -F 'file=@training.zip' \
               -F 'is_pathmind_simulation=true' \
               -F 'env={env_name}' \
               -F 'start=true' \
@@ -218,5 +220,7 @@ def write_observation_yaml(simulation: Simulation, folder) -> None:
     """
     obs_name_list = list(simulation.get_observation(0).keys())
     obs = {"observations": obs_name_list}
-    with open(os.path.join(folder, "obs.yaml"), "w") as f:
+
+    obs_file = os.path.join(folder, "obs.yaml")
+    with open(obs_file, "w+") as f:
         f.write(yaml.dump(obs))
