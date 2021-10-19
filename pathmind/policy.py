@@ -1,8 +1,13 @@
+from pathmind.simulation import Simulation, Discrete
+
 import requests
 from typing import Dict
 import numpy as np
 import tensorflow as tf
-from simulation import Simulation, Discrete
+
+# tf.compat.v1.enable_eager_execution(
+#     config=None, device_policy=None, execution_mode=None
+# )
 
 __all__ = ["Server", "Local", "Random"]
 
@@ -40,6 +45,9 @@ class Local(Policy):
         self.prev_reward_tensor = tf.constant([0], dtype=tf.float32)
         self.prev_action_tensor = tf.constant([0], dtype=tf.int64)
         self.seq_lens_tensor = tf.constant([0], dtype=tf.int32)
+        self.timestep = tf.compat.v1.placeholder_with_default(
+            tf.zeros((), dtype=tf.int64), (), name="timestep"
+        )
 
         tf_trackable = tf.saved_model.load(model_file)
         self.model = tf_trackable.signatures.get("serving_default")
@@ -54,17 +62,17 @@ class Local(Policy):
         actions = {}
         for i in range(simulation.number_of_agents()):
             obs: dict = simulation.get_observation(i)
-            observation = np.asarray(obs).reshape((1, -1))
-            inputs = tf.convert_to_tensor(
-                np.asarray(observation), dtype=tf.float32, name="observations"
-            )
+            obs_values: list = [*obs.values()]
+            observation = np.asarray(obs_values).reshape((1, -1))
+            tensors = tf.convert_to_tensor(observation, dtype=tf.float32, name="observations")
 
             result = self.model(
-                observations=inputs,
+                observations=tensors,
                 is_training=self.is_training_tensor,
                 seq_lens=self.seq_lens_tensor,
                 prev_action=self.prev_action_tensor,
                 prev_reward=self.prev_reward_tensor,
+                timestep=self.timestep,
             )
 
             action_keys = [k for k in result.keys() if "actions_" in k]
@@ -72,7 +80,7 @@ class Local(Policy):
             if not self.is_tuple:
                 action_tensor = result.get(action_keys[0])
                 numpy_tensor = action_tensor.numpy()
-                plain_actions = action_type(numpy_tensor[0])
+                plain_actions = [action_type(numpy_tensor[0])]
             else:
                 numpy_tensors = [result.get(k).numpy() for k in action_keys]
                 plain_actions = [action_type(x) for x in numpy_tensors]

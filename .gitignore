@@ -65,3 +65,5 @@ sources/
 site/
 
 .vscode
+
+*.csv

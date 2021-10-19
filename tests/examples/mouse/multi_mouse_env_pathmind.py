@@ -1,5 +1,6 @@
 import typing
-from pathmind.simulation import Simulation, Discrete, Continuous
+
+from pathmind.simulation import Continuous, Discrete, Simulation
 
 
 class MultiMouseAndCheese(Simulation):
@@ -46,9 +47,9 @@ class MultiMouseAndCheese(Simulation):
             "mouse_row": float(self.mouses[agent_id][0]) / 5.0,
             "mouse_col": float(self.mouses[agent_id][1]) / 5.0,
             "mouse_row_dist": abs(self.cheeses[agent_id][0] - self.mouses[agent_id][0])
-            / 5.0,
+                              / 5.0,
             "mouse_col_dist": abs(self.cheeses[agent_id][1] - self.mouses[agent_id][1])
-            / 5.0,
+                              / 5.0,
         }
 
     def get_reward(self, agent_id) -> typing.Dict[str, float]:

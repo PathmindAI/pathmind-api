@@ -9,7 +9,7 @@ setup(
     download_url="https://github.com/PathmindAPI/pathmind_api/tarball/0.1",
     author="Max Pumperla",
     author_email="max@pathmind.com",
-    install_requires=["numpy", "pyyaml", "requests"],
+    install_requires=["pyyaml", "tensorflow", "requests", "prettytable"],
     packages=find_packages(),
     license="MIT",
     zip_safe=False,
