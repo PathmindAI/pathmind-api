@@ -52,7 +52,7 @@ class MultiMouseAndCheese(Simulation):
                               / 5.0,
         }
 
-    def get_reward(self, agent_id) -> typing.Dict[str, float]:
+    def get_metrics(self, agent_id) -> typing.Dict[str, float]:
         return {
             "found_cheese": 1 if self.is_done(agent_id) and self.moved[agent_id] else 0
         }

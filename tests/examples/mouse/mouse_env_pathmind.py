@@ -46,7 +46,7 @@ class MouseAndCheese(Simulation):
             "cheese_col": float(self.cheese[1]) / 5.0,
         }
 
-    def get_reward(self, agent_id) -> typing.Dict[str, float]:
+    def get_metrics(self, agent_id) -> typing.Dict[str, float]:
         return {"found_cheese": 1 if self.mouse == self.cheese else 0}
 
     def is_done(self, agent_id) -> bool:
