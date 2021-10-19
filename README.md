@@ -36,9 +36,9 @@ Simply implement the `Simulation` interface provided in `simulation.py`, see the
 curl -i -XPOST \
   -H "X-PM-API-TOKEN: <PM_TOKEN>" \
   -F 'file=@examples.zip' \
-  -F 'is_pathmind_simulation=TRUE' \
+  -F 'is_pathmind_simulation=true' \
   -F 'env=examples.mouse.mouse_env_pathmind.MouseAndCheese' \
-  -F 'start=TRUE' \
+  -F 'start=true' \
   https://api.pathmind.com/py/upload
 ```
 
@@ -46,11 +46,11 @@ curl -i -XPOST \
 curl -i -XPOST \
   -H "X-PM-API-TOKEN: <PM_TOKEN>" \
   -F 'file=@examples.zip' \
-  -F 'multi_agent=TRUE' \
-  -F 'is_pathmind_simulation=TRUE' \
+  -F 'multi_agent=true' \
+  -F 'is_pathmind_simulation=true' \
   -F 'obs_selection=examples/mouse/obs.yaml' \
   -F 'rew_fct_name=examples.mouse.reward.reward_function' \
   -F 'env=examples.mouse.multi_mouse_env_pathmind.MultiMouseAndCheese' \
-  -F 'start=TRUE' \
+  -F 'start=true' \
   https://api.pathmind.com/py/upload
 ```
