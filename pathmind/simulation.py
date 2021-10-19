@@ -98,6 +98,7 @@ class Simulation:
         """Has this agent reached its target?"""
         raise NotImplementedError
 
+    # TODO revisit adding get_metrics
     def get_metrics(self, agent_id: int) -> Dict[str, float]:
         """Get simulation metrics as a dictionary, given the current simulation state,
         per agent. Metrics are the foundation of creating reward functions in Pathmind."""
