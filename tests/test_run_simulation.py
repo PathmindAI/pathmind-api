@@ -35,14 +35,14 @@ def test_random_multi_mouse_rollout():
 
 
 def test_server_single_mouse_rollout():
-    pytest.skip('Requires running policy server')
+    pytest.skip("Requires running policy server")
     simulation = MouseAndCheese()
     policy = Server(url="localhost:8080", api_key="1234567asdfgh")
     simulation.run(policy)
 
 
 def test_server_multi_mouse_rollout():
-    pytest.skip('Requires running policy server')
+    pytest.skip("Requires running policy server")
     simulation = MultiMouseAndCheese()
     policy = Server(url="localhost:8080", api_key="1234567asdfgh")
     simulation.run(policy)

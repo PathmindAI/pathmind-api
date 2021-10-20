@@ -34,7 +34,7 @@ as follows.
 
 To get started, please [register for a Pathmind account](https://app.pathmind.com/sign-up).
 The following items are required to utilize Pathmind's training infrastructure.
-Once registered need to find your [pathmind.com](pathmind.com) access token from your account as shown in
+Once registered you need to find your [pathmind.com](pathmind.com) access token from your account as shown in
 the following figure:
 
 ![AccessToken](./assets/accesstoken.png)

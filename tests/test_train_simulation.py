@@ -10,6 +10,6 @@ def test_training():
 
 
 def test_multi_training():
-    pytest.skip('Needs multi-agent training to work on web app')
+    pytest.skip("Needs multi-agent training to work on web app")
     simulation = MultiMouseAndCheese()
     simulation.train()
