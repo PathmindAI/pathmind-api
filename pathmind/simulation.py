@@ -98,11 +98,6 @@ class Simulation:
         """Has this agent reached its target?"""
         raise NotImplementedError
 
-    # TODO revisit adding get_metrics
-    def get_metrics(self, agent_id: int) -> Dict[str, float]:
-        """Get simulation metrics as a dictionary, given the current simulation state,
-        per agent. Metrics are the foundation of creating reward functions in Pathmind."""
-
     def run(
         self,
         policy,
@@ -129,7 +124,7 @@ class Simulation:
             ["Episode", "Step"]
             + [f"observations_{i}" for i in agents]
             + [f"actions_{i}" for i in agents]
-            + [f"metrics_{i}" for i in agents]
+            + [f"rewards_{i}" for i in agents]
             + [f"done_{i}" for i in agents]
         )
         print(table)
@@ -154,7 +149,7 @@ class Simulation:
                 }
 
                 row += [self.action[agent_id] for agent_id in agents]
-                row += [self.get_metrics(agent_id) for agent_id in agents]
+                row += [self.get_reward(agent_id) for agent_id in agents]
                 row += [d for d in dones.values()]
                 table.add_row(row)
 
@@ -180,14 +175,14 @@ class Simulation:
                     writer = csv.writer(out)
                     writer.writerows(result)
 
-    def train(self, base_folder: str, observation_yaml: str = None):
+    def train(self, base_folder: str = "./", observation_yaml: str = None):
         """
-        :param base_folder the path to your base folder containing all
-        :param observation_yaml:
+        :param base_folder the path to your base folder containing all your Python code. Defaults to the current
+            working directory, which assumes you start training from the base of your code base.
+        :param observation_yaml: optional string with path to an observation yaml
         """
 
         env_name = str(self.__class__).split("'")[1]
-        # base_folder = env_name.split(".")[0]
         multi_agent = self.number_of_agents() > 1
 
         if not observation_yaml:

@@ -1,1 +1,2 @@
-from .simulation import Continuous, Discrete, Simulation
+from .policy import *
+from .simulation import *
