@@ -68,3 +68,8 @@ site/
 
 *.csv
 training.zip
+
+node_modules/
+package-lock.json
+package.json
+

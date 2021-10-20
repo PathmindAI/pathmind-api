@@ -1,6 +1,6 @@
 # Pathmind simulation Python API
 
-Pathmind provides an interface to implement and train reinforcement learning policies, using Python-based simulations, in the cloud. 
+Pathmind provides an interface to implement and train reinforcement learning policies, using Python-based simulations, in the cloud.
 This may be useful for people who:
 
 - Prefer to simulate real-life scenarios using Python versus a simulation IDE such as AnyLogic.
@@ -29,8 +29,8 @@ See the following two examples to understand the mechanics behind Pathmind's Pyt
 - **Single Agent Example**: [Mouse chasing cheese example](https://github.com/PathmindAI/pathmind-api/blob/main/tests/examples/mouse/mouse_env_pathmind.py)
 - **Multi-Agent Example** - [Multiple mouses chasing cheese example](https://github.com/PathmindAI/pathmind-api/blob/main/tests/examples/mouse/multi_mouse_env_pathmind.py)
 
-Once you have a `Simulation` ready, you can use it train a model with Pathmind
-as follows. 
+Once you have a `Simulation` ready, you can use it to train a model with Pathmind
+as follows.
 
 To get started, please [register for a Pathmind account](https://app.pathmind.com/sign-up).
 The following items are required to utilize Pathmind's training infrastructure.
@@ -71,7 +71,7 @@ That means your folder structure might look as follows:
 After you run `.train()` on your simulation, you'll see a URL for your Pathmind experiment prompted:
 
 ```text
->>> See your Pathmind experiment at: 
+>>> See your Pathmind experiment at:
 	https://app.pathmind.com/editGoals/6190?experiment=17157
 ```
 
@@ -106,7 +106,6 @@ simulation.run(policy)
 If you opt to run the policy yourself locally, you have to click "Export Policy" in the web interface instead.
 This will give you a zip file that you need to unpack locally, next to your simulation code.
 
-
 ```python
 from my_sim import MySim
 from pathmind.policy import Local
@@ -135,7 +134,7 @@ simulation.run(policy)
 The interface is inspired by OpenAI gym, but differs in certain points:
 
 - A Pathmind `Simulation` works for single and multiple agents.
-- You only define dictionaries of  reward contributions, not a single reward value.
+- You only define dictionaries of reward contributions, not a single reward value.
   Reward functions can be crafted the Pathmind app, without
   having to go back to your original Python implementation. If you don't provide any function,
   all contributions will be summed up by default
@@ -143,4 +142,3 @@ The interface is inspired by OpenAI gym, but differs in certain points:
   select which ones to use for training in the Pathmind app.
 - You can rely on Pathmind's scalable backend for training and don't have to
   run your workloads on your machine.
-  
