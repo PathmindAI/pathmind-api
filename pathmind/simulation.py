@@ -1,8 +1,14 @@
-from typing import List, Union, Dict, Optional
+import csv
 import math
-import numpy as np
-import requests
+import os
+import shutil
+import subprocess
+import time
+from typing import Dict, List, Optional, Union
 
+import numpy as np
+import yaml
+from prettytable import PrettyTable
 
 __all__ = ["Discrete", "Continuous", "Simulation"]
 
@@ -53,12 +59,12 @@ class Simulation:
 
     def __init__(self, *args, **kwargs):
         """Set any properties and initial states needed for your simulation."""
-        pass
 
     def set_action(self, action: Dict[int, Union[float, np.ndarray]]):
         """Use this to test your own decisions, or to integrate with Pathmind's Policy Server.
         set_action should always be executed before running the next step of your simulation."""
         self.action = action
+        raise NotImplementedError
 
     def number_of_agents(self) -> int:
         """Returns the total number of agents to be controlled by Pathmind."""
@@ -79,8 +85,8 @@ class Simulation:
         raise NotImplementedError
 
     def get_reward(self, agent_id: int) -> Dict[str, float]:
-        """Get the reward terms of the simulation as a dictionary, given the current simulation state,
-        per agent."""
+        """Get reward terms as a dictionary, given the current simulation state
+        per agent, which are the foundation of creating reward functions in Pathmind."""
         raise NotImplementedError
 
     def get_observation(self, agent_id: int) -> Dict[str, Union[float, List[float]]]:
@@ -92,27 +98,148 @@ class Simulation:
         """Has this agent reached its target?"""
         raise NotImplementedError
 
-    def get_metrics(self, agent_id: int) -> Optional[List[float]]:
-        """Return a list of numerical values you want to track. If you don't
-        specify any metrics, we simply use all provided observations for your agents."""
-        return None
+    # TODO revisit adding get_metrics
+    def get_metrics(self, agent_id: int) -> Dict[str, float]:
+        """Get simulation metrics as a dictionary, given the current simulation state,
+        per agent. Metrics are the foundation of creating reward functions in Pathmind."""
+
+    def run(
+        self,
+        policy,
+        out_csv: Optional[str] = None,
+        num_episodes: int = 1,
+        sleep: Optional[int] = None,
+    ) -> None:
+        """
+        Runs a simulation with a given policy. In Reinforcement Learning terms this creates a
+        "rollout" of the policy over the specified number of episodes to run in the simulation.
+
+        :param policy: A Pathmind Policy (local, server, or random)
+        :param out_csv: If you specify an output CSV file, results will be stored there for debugging purposes.
+        :param num_episodes: the number of episodes to run rollouts for.
+        :param sleep: Optionally sleep for "sleep" seconds to make debugging easier.
+        """
+        # Only debug single episodes
+        debug_mode = True if num_episodes == 1 else False
+        done = False
+        self.reset()
+        agents = range(self.number_of_agents())
+        table = PrettyTable()
+        table.field_names = (
+            ["Episode", "Step"]
+            + [f"observations_{i}" for i in agents]
+            + [f"actions_{i}" for i in agents]
+            + [f"metrics_{i}" for i in agents]
+            + [f"done_{i}" for i in agents]
+        )
+        print(table)
+
+        for episode in range(num_episodes):
+            step = 0
+            while not done:
+                row = [episode, step]
+                if sleep:
+                    # Optionally sleep for "sleep" seconds for easier debugging.
+                    time.sleep(sleep)
+
+                # Observations are "initial", i.e. before the action
+                row += [self.get_observation(agent_id) for agent_id in agents]
+
+                actions = policy.get_actions(self)
+                self.action = actions
+
+                self.step()
+                dones = {
+                    f"agent_{agent_id}": self.is_done(agent_id) for agent_id in agents
+                }
+
+                row += [self.action[agent_id] for agent_id in agents]
+                row += [self.get_metrics(agent_id) for agent_id in agents]
+                row += [d for d in dones.values()]
+                table.add_row(row)
+
+                step += 1
+                done = all(dones.values())
+
+                if debug_mode:
+                    print(row)
+
+            if debug_mode:
+                print(table)
+
+            table_string = table.get_string()
+            result = [
+                tuple(filter(None, map(str.strip, splitline)))
+                for line in table_string.splitlines()
+                for splitline in [line.split("|")]
+                if len(splitline) > 1
+            ]
+
+            if out_csv:
+                with open(out_csv, "w") as out:
+                    writer = csv.writer(out)
+                    writer.writerows(result)
+
+    def train(self, base_folder: str, observation_yaml: str = None):
+        """
+        :param base_folder the path to your base folder containing all
+        :param observation_yaml:
+        """
+
+        env_name = str(self.__class__).split("'")[1]
+        # base_folder = env_name.split(".")[0]
+        multi_agent = self.number_of_agents() > 1
+
+        if not observation_yaml:
+            write_observation_yaml(self, base_folder)
+            obs_yaml = os.path.join(base_folder, "obs.yaml")
+        else:
+            obs_yaml = observation_yaml
+
+        token = os.environ.get("PATHMIND_TOKEN")
+        if not token:
+            raise ValueError(
+                "No Pathmind API token specified, "
+                "please export 'PATHMIND_TOKEN' as environment variable."
+            )
+
+        shutil.make_archive("training", "zip", base_folder)
+
+        cmd = f"""curl -i -XPOST \
+              -H "X-PM-API-TOKEN: {token}" \
+              -F 'file=@training.zip' \
+              -F 'isPathmindSimulation=true' \
+              -F 'env={env_name}' \
+              -F 'start=true' \
+              -F 'multiAgent={multi_agent}' \
+              -F 'obsSelection={obs_yaml}' \
+              https://api.pathmind.com/py/upload
+            """
+
+        result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
+        if b"201" not in result.stdout:
+            print(result.stdout)
+            raise Exception("Could not start training, check the message above.")
+
+        for line in result.stdout.split(b"\r\n"):
+            if b"location" in line:
+                location = line.split(b": ")[-1]
+                print(f">>> See your Pathmind experiment at: \n\t{location.decode()}")
+
+        return result
 
 
-class PolicyServer:
-    """Connect to an existing policy server for your simulation."""
+def write_observation_yaml(simulation: Simulation, folder) -> None:
+    """Writes a YAML file with observation names that will be used by
+    the training program to select which observation values are used for
+    training.
 
-    def __init__(self, url, api_key):
-        self.url = url + "/predict/"
-        self.headers = {"access-token": api_key}
+    :param simulation: A Pathmind Simulation
+    :param folder: the local folder which should contain the "obs.yaml" file
+    """
+    obs_name_list = list(simulation.get_observation(0).keys())
+    obs = {"observations": obs_name_list}
 
-    def get_action(self, simulation: Simulation) -> Dict[int, Union[float, np.ndarray]]:
-        action = {}
-        for i in range(simulation.number_of_agents()):
-            obs: dict = simulation.get_observation(i)
-            import json
-
-            content = requests.post(
-                url=self.url, json=obs, headers=self.headers
-            ).content
-            action[i] = np.asarray(json.loads(content).get("actions"))
-        return action
+    obs_file = os.path.join(folder, "obs.yaml")
+    with open(obs_file, "w+") as f:
+        f.write(yaml.dump(obs))

@@ -65,3 +65,6 @@ sources/
 site/
 
 .vscode
+
+*.csv
+training.zip
