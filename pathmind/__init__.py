@@ -1,2 +1,2 @@
-from .simulation import *
 from .policy import *
+from .simulation import *

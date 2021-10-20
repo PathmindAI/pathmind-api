@@ -1,7 +1,7 @@
 import os
 import pathlib
-import pytest
 
+import pytest
 from examples.mouse.mouse_env_pathmind import MouseAndCheese
 from examples.mouse.multi_mouse_env_pathmind import MultiMouseAndCheese
 
