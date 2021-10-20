@@ -1,12 +1,15 @@
 from examples.mouse.mouse_env_pathmind import MouseAndCheese
 from examples.mouse.multi_mouse_env_pathmind import MultiMouseAndCheese
 
+import pytest
+
 
 def test_training():
     simulation = MouseAndCheese()
-    simulation.train("./")
+    simulation.train()
 
 
 def test_multi_training():
+    pytest.skip('Needs multi-agent training to work on web app')
     simulation = MultiMouseAndCheese()
-    simulation.train("./")
+    simulation.train()
