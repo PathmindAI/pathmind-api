@@ -155,9 +155,6 @@ class Simulation:
                 step += 1
                 done = all(dones)
 
-                if debug_mode:
-                    print(row)
-
             # add reward terms in order after episode completion
             terms = [
                 v for agent_id in agents for v in self.get_reward(agent_id).values()
