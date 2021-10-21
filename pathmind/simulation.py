@@ -53,9 +53,16 @@ class Simulation:
     a single value for agent 0, then action[0] will be a float value, otherwise
     a numpy array with specified shape. You use "action" to apply the next actions
     to your agents in the "step" function.
+
+    During training, you may optionally provide "reward_weights" for each reward
+    term. At each step, the reward signal is comprised of a weighted sum of terms.
+    Reward terms optionally are preprocessed to to yield contributions of
+    comparable total signal magnitude along each episode. Use "auto_norm_reward".
     """
 
     action: Dict[int, Union[float, np.ndarray]] = None
+    reward_weights: List[float] = None
+    auto_norm_reward: bool = False
 
     def __init__(self, *args, **kwargs):
         """Set any properties and initial states needed for your simulation."""
@@ -175,7 +182,8 @@ class Simulation:
                     writer = csv.writer(out)
                     writer.writerows(result)
 
-    def train(self, base_folder: str = "./", observation_yaml: str = None):
+    def train(self, base_folder: str = "./", observation_yaml: str = None,
+        reward_weights: List[float] = None, auto_norm_reward: bool = False):
         """
         :param base_folder the path to your base folder containing all your Python code. Defaults to the current
             working directory, which assumes you start training from the base of your code base.
@@ -190,6 +198,9 @@ class Simulation:
             obs_yaml = os.path.join(base_folder, "obs.yaml")
         else:
             obs_yaml = observation_yaml
+
+        self.reward_weights = reward_weights
+        self.auto_norm_reward = auto_norm_reward
 
         token = os.environ.get("PATHMIND_TOKEN")
         if not token:
@@ -208,6 +219,7 @@ class Simulation:
               -F 'start=true' \
               -F 'multiAgent={multi_agent}' \
               -F 'obsSelection={obs_yaml}' \
+              -F 'useAutoNorm={auto_norm_reward}' \
               https://api.pathmind.com/py/upload
             """
 
