@@ -50,7 +50,7 @@ def test_server_multi_mouse_rollout_locally():
 
 def test_server_single_mouse_rollout():
     pytest.skip("Requires running policy server")
-    simulation = MousesAndCheese()
+    simulation = MouseAndCheese()
     policy = Server(url="http://localhost:8000", api_key="1234567asdfgh")
     with pytest.raises(ValueError) as info:
         # This fails due to a validation check
