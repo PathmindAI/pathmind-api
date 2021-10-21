@@ -43,6 +43,7 @@ def test_server_single_mouse_rollout():
     )
     simulation.run(policy)
 
+
 @pytest.mark.xfail(reason="Needs a policy server trained for multi-mouse")
 def test_server_multi_mouse_rollout():
     simulation = MultiMouseAndCheese()
