@@ -66,7 +66,6 @@ class Simulation:
         """Use this to test your own decisions, or to integrate with Pathmind's Policy Server.
         set_action should always be executed before running the next step of your simulation."""
         self.action = action
-        raise NotImplementedError
 
     def number_of_agents(self) -> int:
         """Returns the total number of agents to be controlled by Pathmind."""
