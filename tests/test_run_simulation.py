@@ -19,7 +19,7 @@ def test_single_mouse_rollout():
 def test_multi_mouse_rollout():
     simulation = MultiMouseAndCheese()
     policy = Local(model_file=os.path.join(PATH, "examples/multi_mouse_model"))
-    simulation.run(policy)
+    simulation.run(policy, num_episodes=10, summary_csv="summary.csv")
 
 
 def test_random_single_mouse_rollout():
