@@ -2,6 +2,7 @@ import os
 import pathlib
 
 import numpy as np
+import pandas as pd
 import pytest
 from examples.mouse.mouse_env_pathmind import MouseAndCheese
 from examples.mouse.multi_mouse_env_pathmind import MultiMouseAndCheese
@@ -14,13 +15,20 @@ PATH = pathlib.Path(__file__).parent.resolve()
 def test_single_mouse_rollout():
     simulation = MouseAndCheese()
     policy = Local(model_file=os.path.join(PATH, "examples/mouse_model"))
-    simulation.run(policy, out_csv="output.csv")
+    simulation.run(policy, num_episodes=10, summary_csv="summary.csv")
+    actual = pd.read_csv("summary.csv")
+    d = {
+        "Episode": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "reward_0_found_cheese": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    }
+    expected = pd.DataFrame(data=d)
+    assert actual.equals(expected)
 
 
 def test_multi_mouse_rollout():
     simulation = MultiMouseAndCheese()
     policy = Local(model_file=os.path.join(PATH, "examples/multi_mouse_model"))
-    simulation.run(policy, num_episodes=10, summary_csv="summary.csv")
+    simulation.run(policy, out_csv="output.csv")
 
 
 def test_random_single_mouse_rollout():
