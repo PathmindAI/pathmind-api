@@ -44,11 +44,10 @@ def test_server_single_mouse_rollout():
     simulation.run(policy)
 
 
-@pytest.mark.xfail(reason="Needs a policy server trained for multi-mouse")
 def test_server_multi_mouse_rollout():
     simulation = MultiMouseAndCheese()
     policy = Server(
-        url="https://api.dev.devpathmind.com/policy/id7060",
+        url="https://api.dev.devpathmind.com/policy/id7064",
         api_key="a90c01ad-8239-432c-9ebc-c79a79c41a07",
     )
     simulation.run(policy)
