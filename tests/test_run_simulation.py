@@ -1,6 +1,7 @@
 import os
 import pathlib
 
+import numpy as np
 import pytest
 from examples.mouse.mouse_env_pathmind import MouseAndCheese
 from examples.mouse.multi_mouse_env_pathmind import MultiMouseAndCheese
@@ -34,29 +35,30 @@ def test_random_multi_mouse_rollout():
     simulation.run(policy)
 
 
-def test_server_single_mouse_rollout_locally():
-    pytest.skip("Requires running policy server")
-    simulation = MouseAndCheese()
-    policy = Server(url="localhost:8080", api_key="1234567asdfgh")
-    simulation.run(policy)
-
-
-def test_server_multi_mouse_rollout_locally():
-    pytest.skip("Requires running policy server")
-    simulation = MultiMouseAndCheese()
-    policy = Server(url="localhost:8080", api_key="1234567asdfgh")
-    simulation.run(policy)
-
-
 def test_server_single_mouse_rollout():
-    pytest.skip("Requires running policy server")
     simulation = MouseAndCheese()
-    policy = Server(url="http://localhost:8000", api_key="1234567asdfgh")
-    with pytest.raises(ValueError) as info:
-        # This fails due to a validation check
-        failed_action = policy.get_actions(simulation)
-        assert failed_action is None
-    assert "field required" in str(info.value)
+    policy = Server(
+        url="https://api.dev.devpathmind.com/policy/id7060",
+        api_key="a90c01ad-8239-432c-9ebc-c79a79c41a07",
+    )
+    simulation.run(policy)
+
+@pytest.mark.xfail(reason="Needs a policy server trained for multi-mouse")
+def test_server_multi_mouse_rollout():
+    simulation = MultiMouseAndCheese()
+    policy = Server(
+        url="https://api.dev.devpathmind.com/policy/id7060",
+        api_key="a90c01ad-8239-432c-9ebc-c79a79c41a07",
+    )
+    simulation.run(policy)
+
+
+def test_server_single_mouse_rollout_validation():
+    simulation = MouseAndCheese()
+    policy = Server(
+        url="https://api.dev.devpathmind.com/policy/id7060",
+        api_key="a90c01ad-8239-432c-9ebc-c79a79c41a07",
+    )
 
     def get_obs(self, agent_id: int):
         return {
@@ -72,6 +74,15 @@ def test_server_single_mouse_rollout():
     old_obs = MouseAndCheese.get_observation
     MouseAndCheese.get_observation = get_obs
 
+    with pytest.raises(ValueError) as info:
+        # This fails due to a validation check
+        failed_action = policy.get_actions(simulation)
+        assert failed_action is None
+    assert "field required" in str(info.value)
+
+    # Patch back
+    MouseAndCheese.get_observation = old_obs
+
     # Get a proper action
     action = policy.get_actions(simulation)
     import numpy
@@ -79,5 +90,19 @@ def test_server_single_mouse_rollout():
     assert type(action[0]) == numpy.ndarray
     assert 0 <= action[0][0] <= 3
 
-    # Patch back
-    MouseAndCheese.get_observation = old_obs
+
+def test_policy_predictions():
+    server = Server(
+        url="https://api.pathmind.com/policy/id17404",
+        api_key="6cf587a1-84cc-4cb6-982d-6e0b1e3d45b7",
+    )
+    simulation = MouseAndCheese()
+
+    action = server.get_actions(simulation)
+    assert list(action.keys()) == [0]
+    assert type(action[0]) == np.ndarray
+
+    for i in range(10):
+        action = server.get_actions(simulation)
+        simulation.set_action(action)
+        simulation.step()
