@@ -4,7 +4,6 @@ import os
 import shutil
 import subprocess
 import time
-from operator import add
 from typing import Dict, List, Optional, Union
 
 import numpy as np
@@ -158,8 +157,8 @@ class Simulation:
             terms = [
                 v for agent_id in agents for v in self.get_reward(agent_id).values()
             ]
-            reward_terms = list(map(add, reward_terms, terms))
-            summary.add_row([episode] + reward_terms)
+
+            summary.add_row([episode] + terms)
 
             if debug_mode:
                 print(">>> Complete table:\n")
