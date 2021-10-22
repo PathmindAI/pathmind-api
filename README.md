@@ -142,3 +142,18 @@ The interface is inspired by OpenAI gym, but differs in certain points:
   select which ones to use for training in the Pathmind app.
 - You can rely on Pathmind's scalable backend for training and don't have to
   run your workloads on your machine.
+
+## Development and running tests
+
+Install the test dependencies:
+
+```shell
+pip install -e .[tests]
+```
+
+Run the tests locally:
+
+```shell
+pre-commit run --all-files
+pytest
+```
