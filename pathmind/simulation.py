@@ -7,6 +7,7 @@ import time
 from typing import Dict, List, Optional, Union
 
 import numpy as np
+import prettytable
 import yaml
 from prettytable import PrettyTable
 
@@ -101,6 +102,7 @@ class Simulation:
         self,
         policy,
         out_csv: Optional[str] = None,
+        summary_csv: Optional[str] = None,
         num_episodes: int = 1,
         sleep: Optional[int] = None,
     ) -> None:
@@ -109,7 +111,9 @@ class Simulation:
         "rollout" of the policy over the specified number of episodes to run in the simulation.
 
         :param policy: A Pathmind Policy (local, server, or random)
-        :param out_csv: If you specify an output CSV file, results will be stored there for debugging purposes.
+        :param out_csv: If you specify an output CSV file, complete results of the first episode will be stored there.
+        :param summary_csv: If you specify a summary CSV file, a summary of reward terms over all episodes will be
+            stored in that file.
         :param num_episodes: the number of episodes to run rollouts for.
         :param sleep: Optionally sleep for "sleep" seconds to make debugging easier.
         """
@@ -117,18 +121,14 @@ class Simulation:
         debug_mode = True if num_episodes == 1 else False
         done = False
         self.reset()
+
         agents = range(self.number_of_agents())
-        table = PrettyTable()
-        table.field_names = (
-            ["Episode", "Step"]
-            + [f"observations_{i}" for i in agents]
-            + [f"actions_{i}" for i in agents]
-            + [f"rewards_{i}" for i in agents]
-            + [f"done_{i}" for i in agents]
-        )
-        print(table)
+        table, summary = _define_tables(self, agents)
+
+        reward_terms = [0 for n in summary.field_names if not n == "Episode"]
 
         for episode in range(num_episodes):
+
             step = 0
             while not done:
                 row = [episode, step]
@@ -143,36 +143,31 @@ class Simulation:
                 self.action = actions
 
                 self.step()
-                dones = {
-                    f"agent_{agent_id}": self.is_done(agent_id) for agent_id in agents
-                }
 
+                dones = [self.is_done(agent_id) for agent_id in agents]
                 row += [self.action[agent_id] for agent_id in agents]
                 row += [self.get_reward(agent_id) for agent_id in agents]
-                row += [d for d in dones.values()]
+                row += dones
                 table.add_row(row)
 
                 step += 1
-                done = all(dones.values())
+                done = all(dones)
 
-                if debug_mode:
-                    print(row)
-
-            if debug_mode:
-                print(table)
-
-            table_string = table.get_string()
-            result = [
-                tuple(filter(None, map(str.strip, splitline)))
-                for line in table_string.splitlines()
-                for splitline in [line.split("|")]
-                if len(splitline) > 1
+            # add reward terms in order after episode completion
+            terms = [
+                v for agent_id in agents for v in self.get_reward(agent_id).values()
             ]
 
-            if out_csv:
-                with open(out_csv, "w") as out:
-                    writer = csv.writer(out)
-                    writer.writerows(result)
+            summary.add_row([episode] + terms)
+
+            if debug_mode:
+                print(">>> Complete table:\n")
+                print(table)
+                print(">>> Summary table:\n")
+                print(summary)
+
+            write_table(table=table, out_csv=out_csv)
+            write_table(table=summary, out_csv=summary_csv)
 
     def train(self, base_folder: str = "./", observation_yaml: str = None):
         """
@@ -237,3 +232,43 @@ def write_observation_yaml(simulation: Simulation, folder) -> None:
     obs_file = os.path.join(folder, "obs.yaml")
     with open(obs_file, "w+") as f:
         f.write(yaml.dump(obs))
+
+
+def write_table(
+    table: prettytable.prettytable.PrettyTable, out_csv: Optional[str]
+) -> None:
+    """Store a table to file
+
+    :param table: a PrettyTable
+    :param out_csv: the CSV file you want to store your results at.
+    """
+    table_string = table.get_string()
+    result = [
+        tuple(filter(None, map(str.strip, splitline)))
+        for line in table_string.splitlines()
+        for splitline in [line.split("|")]
+        if len(splitline) > 1
+    ]
+
+    if out_csv:
+        with open(out_csv, "w") as out:
+            writer = csv.writer(out)
+            writer.writerows(result)
+
+
+def _define_tables(simulation, agents):
+    table = PrettyTable()
+    table.field_names = (
+        ["Episode", "Step"]
+        + [f"observations_{i}" for i in agents]
+        + [f"actions_{i}" for i in agents]
+        + [f"rewards_{i}" for i in agents]
+        + [f"done_{i}" for i in agents]
+    )
+
+    summary = PrettyTable()
+    summary.field_names = ["Episode"] + [
+        f"reward_{i}_{name}" for i in agents for name in simulation.get_reward(i).keys()
+    ]
+
+    return table, summary

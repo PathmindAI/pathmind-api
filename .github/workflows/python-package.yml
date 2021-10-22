@@ -45,6 +45,6 @@ jobs:
         env:
           PATHMIND_TOKEN: ${{ secrets.PATHMIND_TOKEN }}
         run: |
-          pip install pytest
+          pip install pytest pandas
           cd tests
           pytest .
