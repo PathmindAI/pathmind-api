@@ -183,7 +183,7 @@ class Simulation:
                     writer.writerows(result)
 
     def train(self, base_folder: str = "./", observation_yaml: str = None,
-        reward_weights: List[float] = None, auto_norm_reward: bool = False):
+        reward_weights: Optional[List[float]] = None, auto_norm_reward: bool = False):
         """
         :param base_folder the path to your base folder containing all your Python code. Defaults to the current
             working directory, which assumes you start training from the base of your code base.
