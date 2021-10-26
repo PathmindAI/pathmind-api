@@ -1,2 +1,2 @@
-def reward_function(rew: dict) -> float:
+def reward_function(rew: dict):
     return rew["found_cheese"] * 2
