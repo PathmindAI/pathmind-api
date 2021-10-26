@@ -1,3 +1,4 @@
+import json
 from typing import Dict
 
 import numpy as np
@@ -27,12 +28,29 @@ class Server(Policy):
         actions = {}
         for i in range(simulation.number_of_agents()):
             obs: dict = simulation.get_observation(i)
-            import json
 
-            content = requests.post(
-                url=self.url, json=obs, headers=self.headers
-            ).content
-            actions[i] = np.asarray(json.loads(content).get("actions"))
+            response = requests.post(url=self.url, json=obs, headers=self.headers)
+            code = response.status_code
+            if code == 200:
+                payload = json.loads(response.content)
+                actions[i] = np.asarray(payload.get("actions"))
+            elif code == 422:
+                payload = json.loads(response.content)
+                raise ValueError(
+                    f"The provided observations didn't pass validation.\n"
+                    f"Please check the following validation message: {payload}"
+                )
+            elif code == 401:
+                raise ValueError(
+                    f"You're not authorized to run this request."
+                    f"Make sure the 'api_key' provided is correct.\n"
+                    f"Error message: {response.content}"
+                )
+            else:
+                raise ValueError(
+                    f"Couldn't get actions from policy server.\n"
+                    f"Error message: {response.content}"
+                )
         return actions
 
 
