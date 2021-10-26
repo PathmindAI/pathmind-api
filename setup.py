@@ -9,7 +9,9 @@ setup(
     author="Max Pumperla",
     author_email="max@pathmind.com",
     install_requires=["pyyaml", "tensorflow", "requests", "prettytable"],
-    extras_require={"tests": ["pytest", "flake8", "pre-commit", "pandas"]},
+    extras_require={
+        "tests": ["pytest", "flake8", "flake8-debugger", "pre-commit", "pandas"]
+    },
     packages=find_packages(),
     license="MIT",
     zip_safe=False,
