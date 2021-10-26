@@ -28,7 +28,7 @@ See the following two examples to understand the mechanics behind Pathmind's Pyt
 
 - **Single Agent Example**: [Mouse chasing cheese example](https://github.com/PathmindAI/pathmind-api/blob/main/tests/examples/mouse/mouse_env_pathmind.py)
 - **Multi-Agent Example** - [Multiple mouses chasing cheese example](https://github.com/PathmindAI/pathmind-api/blob/main/tests/examples/mouse/multi_mouse_env_pathmind.py)
-- **Multi-Reward Example** - [Reward balancing mouses chasing cheese example](https://github.com/PathmindAI/pathmind-api/blob/main/tests/examples/mouse/mouses.py)
+- **Multi-Reward Example** - [Reward balancing mouses chasing cheese example](https://github.com/PathmindAI/pathmind-api/blob/main/tests/examples/mouse/two_reward_balance.py)
 
 Once you have a `Simulation` ready, you can use it to train a model with Pathmind
 as follows.
