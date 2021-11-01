@@ -1,13 +1,16 @@
 import os
 import pathlib
 
+import gym
 import numpy as np
+import or_gym
 import pandas as pd
 import pytest
 from examples.mouse.mouse_env_pathmind import MouseAndCheese
 from examples.mouse.multi_mouse_env_pathmind import MultiMouseAndCheese
 
 from pathmind.policy import Local, Random, Server
+from pathmind.simulation import from_gym
 
 PATH = pathlib.Path(__file__).parent.resolve()
 
@@ -114,3 +117,15 @@ def test_policy_predictions():
         action = server.get_actions(simulation)
         simulation.set_action(action)
         simulation.step()
+
+
+def test_from_gym():
+    env = gym.make("CartPole-v0")
+    sim = from_gym(env)
+    sim.run(Random())
+
+
+def test_from_or_gym():
+    env = or_gym.make("Knapsack-v0")
+    sim = from_gym(env)
+    sim.run(Random())
