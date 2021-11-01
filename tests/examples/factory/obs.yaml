@@ -1,0 +1,6 @@
+observations:
+- current_time_minute
+- current_time_hour
+- current_day
+- current_month
+- price
