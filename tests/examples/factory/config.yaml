@@ -1,20 +1,20 @@
-weekly_production_target: 5000  # your weekly production target
-max_changes_per_day: 12  # restrict how often you can buy per day
-buying_window: 30  # 30 minute time interval
-price_update_window: 5  # look ahead every 5 minutes
-historic_voltage_estimation: 435  # estimated from historical data
+weekly_production_target: 5000 # your weekly production target
+max_changes_per_day: 12 # restrict how often you can buy per day
+buying_window: 30 # 30 minute time interval
+price_update_window: 5 # look ahead every 5 minutes
+historic_voltage_estimation: 435 # estimated from historical data
 
 # Heuristics definition
 price_intervals:
-- 0
-- 100
-- 200
-- 300
-- 400
-- 500
+  - 0
+  - 100
+  - 200
+  - 300
+  - 400
+  - 500
 power_levels:
-- 200
-- 100
-- 66
-- 50
-- 40
+  - 200
+  - 100
+  - 66
+  - 50
+  - 40
