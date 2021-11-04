@@ -170,7 +170,7 @@ class Simulation:
 
             write_table(table=table, out_csv=out_csv)
             write_table(table=summary, out_csv=summary_csv)
-            print(f'--------Finished episode {episode}--------')
+            print(f"--------Finished episode {episode}--------")
 
     def train(self, base_folder: str = "./", observation_yaml: str = None):
         """
