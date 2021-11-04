@@ -28,6 +28,7 @@ See the following two examples to understand the mechanics behind Pathmind's Pyt
 
 - **Single Agent Example**: [Mouse chasing cheese example](https://github.com/PathmindAI/pathmind-api/blob/main/tests/examples/mouse/mouse_env_pathmind.py)
 - **Multi-Agent Example** - [Multiple mouses chasing cheese example](https://github.com/PathmindAI/pathmind-api/blob/main/tests/examples/mouse/multi_mouse_env_pathmind.py)
+- **Multi-Reward Example** - [Reward balancing mouses chasing cheese example](https://github.com/PathmindAI/pathmind-api/blob/main/tests/examples/mouse/two_reward_balance.py)
 
 Once you have a `Simulation` ready, you can use it to train a model with Pathmind
 as follows.
@@ -142,6 +143,7 @@ The interface is inspired by OpenAI gym, but differs in certain points:
   select which ones to use for training in the Pathmind app.
 - You can rely on Pathmind's scalable backend for training and don't have to
   run your workloads on your machine.
+- Competing reward signals may be optionally weighted and auto-normalized
 
 ## Development and running tests
 
