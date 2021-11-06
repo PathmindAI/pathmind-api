@@ -9,6 +9,10 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 import prettytable
 import yaml
+from gym import Env
+from gym.spaces import Box as GymContinuous
+from gym.spaces import Discrete as GymDiscrete
+from or_gym import Env as OrEnv
 from prettytable import PrettyTable
 
 __all__ = ["Discrete", "Continuous", "Simulation"]
@@ -125,11 +129,11 @@ class Simulation:
         agents = range(self.number_of_agents())
         table, summary = _define_tables(self, agents)
 
-        reward_terms = [0 for n in summary.field_names if not n == "Episode"]
-
         for episode in range(num_episodes):
 
             step = 0
+            done = False
+            self.reset()
             while not done:
                 row = [episode, step]
                 if sleep:
@@ -157,7 +161,6 @@ class Simulation:
             terms = [
                 v for agent_id in agents for v in self.get_reward(agent_id).values()
             ]
-
             summary.add_row([episode] + terms)
 
             if debug_mode:
@@ -168,6 +171,7 @@ class Simulation:
 
             write_table(table=table, out_csv=out_csv)
             write_table(table=summary, out_csv=summary_csv)
+            print(f"--------Finished episode {episode}--------")
 
     def train(self, base_folder: str = "./", observation_yaml: str = None):
         """
@@ -269,3 +273,65 @@ def _define_tables(simulation, agents):
     ]
 
     return table, summary
+
+
+def from_gym(gym_instance: Union[Env, OrEnv]) -> Simulation:
+    """
+
+    :param gym_instance: gym or OR-gym environment
+    :return: A pathmind environment
+    """
+
+    class GymSimulation(Simulation):
+        def __init__(self, gym_instance: Union[Env, OrEnv], *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.env = gym_instance
+            self.observations: Dict[str, float] = {}
+            self.rewards: Dict[str, float] = {"reward": 0}
+            self.done: bool = False
+
+        def number_of_agents(self) -> int:
+            return 1
+
+        def action_space(self, agent_id: int) -> Union[Continuous, Discrete]:
+            gym_space = self.env.action_space
+            if isinstance(gym_space, GymDiscrete):
+                # TODO take care of MultiDiscrete.
+                space = Discrete(choices=gym_space.n)
+            elif isinstance(gym_space, GymContinuous):
+                space = Continuous(
+                    shape=gym_space.shape, low=gym_space.low, high=gym_space.high
+                )
+            else:
+                raise ValueError(
+                    f"Unsupported gym.spaces type {type(gym_space)}. Pathmind currently only allows"
+                    f"gym.spaces.Discrete and gym.spaces.Box as valid action spaces."
+                )
+            return space
+
+        def step(self) -> None:
+            # This assumes "choices=1"
+            action = self.action[0][0]
+            obs, rew, done, _ = self.env.step(action)
+            self.observations = {f"obs_{i}": o for i, o in enumerate(obs)}
+            self.rewards = {"reward": rew}
+            self.done = done
+
+        def reset(self) -> None:
+            obs = self.env.reset()
+            self.observations = {f"obs_{i}": o for i, o in enumerate(obs)}
+            self.done = False
+
+        def get_reward(self, agent_id: int) -> Dict[str, float]:
+            return self.rewards
+
+        def get_observation(
+            self, agent_id: int
+        ) -> Dict[str, Union[float, List[float]]]:
+            return self.observations
+
+        def is_done(self, agent_id: int) -> bool:
+            return self.done
+
+    sim = GymSimulation(gym_instance=gym_instance)
+    return sim
