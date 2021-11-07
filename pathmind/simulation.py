@@ -125,6 +125,7 @@ class Simulation:
         if not policy:
             from pathmind.policy import Random
 
+            print("Running with Random Actions")
             policy = Random()
 
         # Only debug single episodes
