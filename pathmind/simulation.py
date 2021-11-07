@@ -219,7 +219,7 @@ class Simulation:
                 location = line.split(b": ")[-1]
                 print(f">>> See your Pathmind experiment at: \n\t{location.decode()}")
 
-        return result
+        return
 
 
 def write_observation_yaml(simulation: Simulation, folder) -> None:
