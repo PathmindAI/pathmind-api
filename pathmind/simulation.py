@@ -104,7 +104,7 @@ class Simulation:
 
     def run(
         self,
-        policy,
+        policy=None,
         out_csv: Optional[str] = None,
         summary_csv: Optional[str] = None,
         num_episodes: int = 1,
@@ -114,13 +114,19 @@ class Simulation:
         Runs a simulation with a given policy. In Reinforcement Learning terms this creates a
         "rollout" of the policy over the specified number of episodes to run in the simulation.
 
-        :param policy: A Pathmind Policy (local, server, or random)
+        :param policy: A Pathmind Policy (local, server, or random). Default is random.
         :param out_csv: If you specify an output CSV file, complete results of the first episode will be stored there.
         :param summary_csv: If you specify a summary CSV file, a summary of reward terms over all episodes will be
             stored in that file.
         :param num_episodes: the number of episodes to run rollouts for.
         :param sleep: Optionally sleep for "sleep" seconds to make debugging easier.
         """
+
+        if not policy:
+            from pathmind.policy import Random
+
+            policy = Random()
+
         # Only debug single episodes
         debug_mode = True if num_episodes == 1 else False
         done = False
