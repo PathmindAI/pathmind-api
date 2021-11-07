@@ -173,11 +173,17 @@ class Simulation:
             write_table(table=summary, out_csv=summary_csv)
             print(f"--------Finished episode {episode}--------")
 
-    def train(self, base_folder: str = "./", observation_yaml: str = None):
+    def train(
+        self,
+        base_folder: str = "./",
+        observation_yaml: str = None,
+        debug_mode: Optional[bool] = False,
+    ) -> None:
         """
         :param base_folder the path to your base folder containing all your Python code. Defaults to the current
             working directory, which assumes you start training from the base of your code base.
         :param observation_yaml: optional string with path to an observation yaml
+        :param debug_mode: optional boolean to save the uploaded training.zip and show the result of uploading.
         """
 
         env_name = str(self.__class__).split("'")[1]
@@ -219,7 +225,14 @@ class Simulation:
                 location = line.split(b": ")[-1]
                 print(f">>> See your Pathmind experiment at: \n\t{location.decode()}")
 
-        return result
+        if debug_mode:
+            print(">>> Result:")
+            print(result)
+        else:
+            zip_file = os.path.join(base_folder, "training.zip")
+            os.remove(zip_file)
+
+        return
 
 
 def write_observation_yaml(simulation: Simulation, folder) -> None:
