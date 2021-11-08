@@ -157,3 +157,13 @@ Run the tests locally:
 pre-commit run --all-files
 pytest
 ```
+
+## Troubleshooting
+
+- Setting up your simulation: try using debug mode with random actions. This will run your simulation for one episode
+  and output the observations and actions at each step.
+  `simulation.run()`
+
+- Uploading your simulation for training: If you're having issues uploading the simulation for training, you can enable
+  debug-mode: `simulation.train(debug_mode=True)` . This will print the output from uploading and preserve the uploaded file
+  as `training.zip` for you to inspect.
