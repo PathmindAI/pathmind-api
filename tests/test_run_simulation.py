@@ -40,6 +40,11 @@ def test_random_single_mouse_rollout():
     simulation.run(policy)
 
 
+def test_default_random_rollout():
+    simulation = MouseAndCheese()
+    simulation.run()
+
+
 def test_random_multi_mouse_rollout():
     simulation = MultiMouseAndCheese()
     policy = Random()

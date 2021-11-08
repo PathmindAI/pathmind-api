@@ -104,7 +104,7 @@ class Simulation:
 
     def run(
         self,
-        policy,
+        policy=None,
         out_csv: Optional[str] = None,
         summary_csv: Optional[str] = None,
         num_episodes: int = 1,
@@ -114,13 +114,21 @@ class Simulation:
         Runs a simulation with a given policy. In Reinforcement Learning terms this creates a
         "rollout" of the policy over the specified number of episodes to run in the simulation.
 
-        :param policy: A Pathmind Policy (local, server, or random)
+        :param policy: A Pathmind Policy (local, server, or random). Default is random.
         :param out_csv: If you specify an output CSV file, complete results of the first episode will be stored there.
         :param summary_csv: If you specify a summary CSV file, a summary of reward terms over all episodes will be
             stored in that file.
         :param num_episodes: the number of episodes to run rollouts for.
         :param sleep: Optionally sleep for "sleep" seconds to make debugging easier.
         """
+
+        if not policy:
+            # Don't move the import statement. This prevents a circular import.
+            from pathmind.policy import Random
+
+            print("Running with Random Actions")
+            policy = Random()
+
         # Only debug single episodes
         debug_mode = True if num_episodes == 1 else False
         done = False
@@ -169,15 +177,22 @@ class Simulation:
                 print(">>> Summary table:\n")
                 print(summary)
 
-            write_table(table=table, out_csv=out_csv)
-            write_table(table=summary, out_csv=summary_csv)
             print(f"--------Finished episode {episode}--------")
 
-    def train(self, base_folder: str = "./", observation_yaml: str = None):
+        write_table(table=table, out_csv=out_csv)
+        write_table(table=summary, out_csv=summary_csv)
+
+    def train(
+        self,
+        base_folder: str = "./",
+        observation_yaml: str = None,
+        debug_mode: Optional[bool] = False,
+    ) -> None:
         """
         :param base_folder the path to your base folder containing all your Python code. Defaults to the current
             working directory, which assumes you start training from the base of your code base.
         :param observation_yaml: optional string with path to an observation yaml
+        :param debug_mode: optional boolean to save the uploaded training.zip and show the result of uploading.
         """
 
         env_name = str(self.__class__).split("'")[1]
@@ -216,7 +231,14 @@ class Simulation:
                 location = line.split(b": ")[-1]
                 print(f">>> See your Pathmind experiment at: \n\t{location.decode()}")
 
-        return result
+        if debug_mode:
+            print(">>> Result:")
+            print(result)
+        else:
+            zip_file = os.path.join(base_folder, "training.zip")
+            os.remove(zip_file)
+
+        return
 
 
 def write_observation_yaml(simulation: Simulation, folder) -> None:

@@ -28,3 +28,9 @@ def test_from_or_gym():
     env = or_gym.make("Knapsack-v0")
     sim = from_gym(env)
     sim.train()
+
+
+def test_training_debug_mode():
+    # TODO check that training.zip exists
+    simulation = MouseAndCheese()
+    simulation.train(debug_mode=True)
