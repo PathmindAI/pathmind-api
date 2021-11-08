@@ -118,15 +118,15 @@ simulation.run(policy, out_csv="output.csv")
 #### Using random actions for comparison
 
 Sometimes you might want to run a policy against a baseline to see how it fares - and random actions are often a good such baseline.
+Random actions are also a good way to test-run your simulation.
+
 To use random actions, instead of a Pathmind Policy, to run your simulation use:
 
 ```python
 from my_sim import MySim
-from pathmind.policy import Random
 
 simulation = MySim()
-policy = Random()
-simulation.run(policy)
+simulation.run()
 ```
 
 ## Discussion
