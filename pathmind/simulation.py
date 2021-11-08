@@ -123,6 +123,7 @@ class Simulation:
         """
 
         if not policy:
+            # Don't move the import statement. This prevents a circular import.
             from pathmind.policy import Random
 
             print("Running with Random Actions")
