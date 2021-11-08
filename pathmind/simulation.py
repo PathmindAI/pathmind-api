@@ -171,6 +171,9 @@ class Simulation:
 
             print(f"--------Finished episode {episode}--------")
 
+        write_table(table=table, out_csv=out_csv)
+        write_table(table=summary, out_csv=summary_csv)
+
     def train(
         self,
         base_folder: str = "./",
