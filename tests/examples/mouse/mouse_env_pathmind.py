@@ -51,3 +51,7 @@ class MouseAndCheese(Simulation):
 
     def is_done(self, agent_id) -> bool:
         return self.mouse == self.cheese
+
+    def get_metrics(self, agent_id) -> typing.List[float]:
+        # Placeholder, does nothing
+        return 0
