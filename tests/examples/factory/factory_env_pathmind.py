@@ -93,11 +93,11 @@ class EnergyFactory(Simulation):
         before = self.previous_reward
 
         reward = 0
-        reward += after[3] * 100 if self.is_done(agent_id) else 0
-        reward -= (after[4] - before[4]) * 100
-        reward -= 10 if after[6] > 2000 else 0
-        reward -= -1 if after[7] > self.max_changes_per_day else 0
-        reward = 1 if after[8] <= 20 and after[9] == 230 else 0
+        reward += after[3] * 100 if self.is_done(agent_id) else 0 # Penalize if production is over or under target.
+        reward -= (after[4] - before[4]) * 100 # Penalty if cost exceed 70% of 2,000,000. This is to encourage the RL is keep costs as low as possible.
+        reward -= 10 if after[6] > 2000 else 0 # Reward if cost of next action is lower than 2,000.
+        reward -= -1 if after[7] > self.max_changes_per_day else 0 # Penalty if production output changes by more than 12 times per day.
+        reward = 1 if after[8] <= 20 and after[9] == 230 else 0 # Reward for setting maximum production when electricity cost is low.
 
         return { "reward": reward }
 
