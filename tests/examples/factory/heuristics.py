@@ -1,8 +1,8 @@
-from .base import EnergyFactory
+from factory_env_pathmind import EnergyFactory
 
 
 class SimpleHeuristic(EnergyFactory):
-    def __init__(self, config="./pathmind/factory/config.yaml"):
+    def __init__(self, config="config.yaml"):
         super().__init__(config=config)
 
         self.prices = self.config.get("price_intervals")
