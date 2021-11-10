@@ -1,20 +1,19 @@
-'''
+"""
 Multi-period inventory management
 Hector Perez, Christian Hubbs, Owais Sarwar
 4/14/2020
-'''
+"""
 
-import itertools
 import numpy as np
 from scipy.stats import *
-# from or_gym.utils import assign_env_config
-from collections import deque
 
-from pathmind.simulation import Continuous, Discrete, Simulation
+from pathmind.simulation import Discrete, Simulation
+
+# from or_gym.utils import assign_env_config
 
 
 class InvManagementMasterEnv(Simulation):
-    '''
+    """
     The supply chain environment is structured as follows:
 
     It is a multi-period multi-echelon production-inventory system for a single non-perishable product that is sold only
@@ -41,10 +40,10 @@ class InvManagementMasterEnv(Simulation):
         b) Unfulfilled sales and replenishment orders are lost with a goodwill loss penalty.
     5) Surpluss inventory is held at each stage at a holding cost.
 
-    '''
+    """
 
     def __init__(self, *args, **kwargs):
-        '''
+        """
         periods = [positive integer] number of periods in simulation.
         I0 = [non-negative integer; dimension |Stages|-1] initial inventories for each stage.
         p = [positive float] unit price for final product.
@@ -69,7 +68,7 @@ class InvManagementMasterEnv(Simulation):
         alpha = [float in range (0,1]] discount factor to account for the time value of money
         seed_int = [integer] seed for random state.
         user_D = [list] user specified demand for each time period in simulation
-        '''
+        """
         # set default (arbitrary) values when creating environment (if no args or kwargs are given)
         self.periods = 30
         self.I0 = [100, 100, 200]
@@ -81,7 +80,7 @@ class InvManagementMasterEnv(Simulation):
         self.L = [3, 5, 10]
         self.backlog = True
         self.dist = 1
-        self.dist_param = {'mu': 20}
+        self.dist_param = {"mu": 20}
         self.alpha = 0.97
         self.seed_int = 0
         self.user_D = np.zeros(self.periods)
@@ -96,7 +95,9 @@ class InvManagementMasterEnv(Simulation):
         except:
             self.init_inv = np.array([self.I0])
         self.num_periods = self.periods
-        self.unit_price = np.append(self.p, self.r[:-1])  # cost to stage 1 is price to stage 2
+        self.unit_price = np.append(
+            self.p, self.r[:-1]
+        )  # cost to stage 1 is price to stage 2
         self.unit_cost = np.array(self.r)
         self.demand_cost = np.array(self.k)
         self.holding_cost = np.append(self.h, 0)  # holding cost at last stage is 0
@@ -116,38 +117,58 @@ class InvManagementMasterEnv(Simulation):
 
         #  parameters
         #  dictionary with options for demand distributions
-        distributions = {1: poisson,
-                         2: binom,
-                         3: randint,
-                         4: geom,
-                         5: self.user_D}
+        distributions = {1: poisson, 2: binom, 3: randint, 4: geom, 5: self.user_D}
 
         # check inputs
         assert np.all(self.init_inv) >= 0, "The initial inventory cannot be negative"
         try:
-            assert self.num_periods > 0, "The number of periods must be positive. Num Periods = {}".format(
-                self.num_periods)
+            assert (
+                self.num_periods > 0
+            ), "The number of periods must be positive. Num Periods = {}".format(
+                self.num_periods
+            )
         except TypeError:
-            print('\n{}\n'.format(self.num_periods))
+            print("\n{}\n".format(self.num_periods))
         assert np.all(self.unit_price >= 0), "The sales prices cannot be negative."
         assert np.all(self.unit_cost >= 0), "The procurement costs cannot be negative."
-        assert np.all(self.demand_cost >= 0), "The unfulfilled demand costs cannot be negative."
-        assert np.all(self.holding_cost >= 0), "The inventory holding costs cannot be negative."
-        assert np.all(self.supply_capacity > 0), "The supply capacities must be positive."
+        assert np.all(
+            self.demand_cost >= 0
+        ), "The unfulfilled demand costs cannot be negative."
+        assert np.all(
+            self.holding_cost >= 0
+        ), "The inventory holding costs cannot be negative."
+        assert np.all(
+            self.supply_capacity > 0
+        ), "The supply capacities must be positive."
         assert np.all(self.lead_time >= 0), "The lead times cannot be negative."
-        assert (self.backlog == False) | (self.backlog == True), "The backlog parameter must be a boolean."
+        assert (self.backlog == False) | (
+            self.backlog == True
+        ), "The backlog parameter must be a boolean."
         assert m >= 2, "The minimum number of stages is 2. Please try again"
-        assert len(self.unit_cost) == m, "The length of r is not equal to the number of stages."
-        assert len(self.demand_cost) == m, "The length of k is not equal to the number of stages."
-        assert len(self.holding_cost) == m, "The length of h is not equal to the number of stages - 1."
-        assert len(self.supply_capacity) == m - 1, "The length of c is not equal to the number of stages - 1."
-        assert len(self.lead_time) == m - 1, "The length of L is not equal to the number of stages - 1."
+        assert (
+            len(self.unit_cost) == m
+        ), "The length of r is not equal to the number of stages."
+        assert (
+            len(self.demand_cost) == m
+        ), "The length of k is not equal to the number of stages."
+        assert (
+            len(self.holding_cost) == m
+        ), "The length of h is not equal to the number of stages - 1."
+        assert (
+            len(self.supply_capacity) == m - 1
+        ), "The length of c is not equal to the number of stages - 1."
+        assert (
+            len(self.lead_time) == m - 1
+        ), "The length of L is not equal to the number of stages - 1."
         assert self.dist in [1, 2, 3, 4, 5], "dist must be one of 1, 2, 3, 4, 5."
         if self.dist < 5:
-            assert distributions[self.dist].cdf(0, **self.dist_param), "Wrong parameters given for distribution."
+            assert distributions[self.dist].cdf(
+                0, **self.dist_param
+            ), "Wrong parameters given for distribution."
         else:
-            assert len(
-                self.user_D) == self.num_periods, "The length of the user specified distribution is not equal to the number of periods."
+            assert (
+                len(self.user_D) == self.num_periods
+            ), "The length of the user specified distribution is not equal to the number of periods."
         assert (self.alpha > 0) & (self.alpha <= 1), "alpha must be in the range (0,1]."
 
         # select distribution
@@ -165,7 +186,9 @@ class InvManagementMasterEnv(Simulation):
         self.pipeline_length = (m - 1) * (lt_max + 1)
 
     def action_space(self, agent_id):
-        return Discrete(100, 3) # Decision for 3 stages, Actions 0 - 99 (e.g. [43, 2, 98])
+        return Discrete(
+            100, 3
+        )  # Decision for 3 stages, Actions 0 - 99 (e.g. [43, 2, 98])
 
     def number_of_agents(self) -> int:
         return 1
@@ -178,21 +201,21 @@ class InvManagementMasterEnv(Simulation):
 
     def get_metrics(self, agent_id):
         """Return a list of numerical values you want to track."""
-        return 0 #list(self.inventory) + list(self.demands)
+        return 0  # list(self.inventory) + list(self.demands)
 
     def get_observation(self, agent_id):
         return {f"current_state_{k}": v for k, v in enumerate(self.state)}
 
     def seed(self, seed=None):
-        '''
+        """
         Set random number generation seed
-        '''
+        """
         # seed random state
         if seed != None:
             np.random.seed(seed=int(seed))
 
     def _RESET(self):
-        '''
+        """
         Create and initialize all variables and containers.
         Nomenclature:
             I = On hand inventory at the start of each period at each stage (except last one).
@@ -203,20 +226,26 @@ class InvManagementMasterEnv(Simulation):
             B = Backlog at each period at each stage.
             LS = Lost sales at each period at each stage.
             P = Total profit at each stage.
-        '''
+        """
         periods = self.num_periods
         m = self.num_stages
         I0 = self.init_inv
 
         # simulation result lists
-        self.I = np.zeros([periods + 1,
-                           m - 1])  # inventory at the beginning of each period (last stage not included since iventory is infinite)
-        self.T = np.zeros([periods + 1,
-                           m - 1])  # pipeline inventory at the beginning of each period (no pipeline inventory for last stage)
-        self.R = np.zeros([periods, m - 1])  # replenishment order (last stage places no replenishment orders)
+        self.I = np.zeros(
+            [periods + 1, m - 1]
+        )  # inventory at the beginning of each period (last stage not included since iventory is infinite)
+        self.T = np.zeros(
+            [periods + 1, m - 1]
+        )  # pipeline inventory at the beginning of each period (no pipeline inventory for last stage)
+        self.R = np.zeros(
+            [periods, m - 1]
+        )  # replenishment order (last stage places no replenishment orders)
         self.D = np.zeros(periods)  # demand at retailer
         self.S = np.zeros([periods, m])  # units sold
-        self.B = np.zeros([periods, m])  # backlog (includes top most production site in supply chain)
+        self.B = np.zeros(
+            [periods, m]
+        )  # backlog (includes top most production site in supply chain)
         self.LS = np.zeros([periods, m])  # lost sales
         self.P = np.zeros(periods)  # profit
 
@@ -244,19 +273,19 @@ class InvManagementMasterEnv(Simulation):
         if t == 0:
             pass
         elif t >= lt_max:
-            state[-m * lt_max:] += self.action_log[t - lt_max:t].flatten()
+            state[-m * lt_max :] += self.action_log[t - lt_max : t].flatten()
         else:
-            state[-m * (t):] += self.action_log[:t].flatten()
+            state[-m * (t) :] += self.action_log[:t].flatten()
 
         self.state = state.copy()
         self.reward = 0
 
     def _update_base_stock_policy_state(self):
-        '''
+        """
         Get current state of the system: Inventory position at each echelon
         Inventory at hand + Pipeline inventory - backlog up to the current stage
         (excludes last stage since no inventory there, nor replenishment orders placed there).
-        '''
+        """
         n = self.period
         m = self.num_stages
         if n >= 1:
@@ -266,10 +295,10 @@ class InvManagementMasterEnv(Simulation):
         self.state = IP
 
     def _STEP(self, action):
-        '''
+        """
         Take a step in time in the multiperiod inventory management problem.
         action = [integer; dimension |Stages|-1] number of units to request from suppliers (last stage makes no requests)
-        '''
+        """
         print("Action", action)
         R = np.maximum(action, 0).astype(int)
 
@@ -298,7 +327,9 @@ class InvManagementMasterEnv(Simulation):
         RnL = np.zeros(m - 1)  # initialize
         for i in range(m - 1):
             if n - L[i] >= 0:
-                RnL[i] = self.R[n - L[i], i].copy()  # replenishment placed at the end of period n-L-1
+                RnL[i] = self.R[
+                    n - L[i], i
+                ].copy()  # replenishment placed at the end of period n-L-1
                 I[i] = I[i] + RnL[i]
 
         # demand is realized
@@ -321,7 +352,9 @@ class InvManagementMasterEnv(Simulation):
         # update inventory on hand and pipeline inventory
         I = I - S[:-1]  # updated inventory at all stages (exclude last stage)
         T = T - RnL + R  # updated pipeline inventory at all stages (exclude last one)
-        self.I[n + 1, :] = I  # store inventory available at start of period n + 1 (exclude last stage)
+        self.I[
+            n + 1, :
+        ] = I  # store inventory available at start of period n + 1 (exclude last stage)
         self.T[n + 1, :] = T  # store pipeline inventory at start of period n + 1
 
         # unfulfilled orders
@@ -344,8 +377,12 @@ class InvManagementMasterEnv(Simulation):
         h = self.holding_cost
         a = self.discount
         II = np.append(I, 0)  # augment inventory so that last has no onsite inventory
-        RR = np.append(R, S[-1])  # augment replenishment orders to include production cost at last stage
-        P = a ** n * np.sum(p * S - (r * RR + k * U + h * II))  # discounted profit in period n
+        RR = np.append(
+            R, S[-1]
+        )  # augment replenishment orders to include production cost at last stage
+        P = a ** n * np.sum(
+            p * S - (r * RR + k * U + h * II)
+        )  # discounted profit in period n
         # P = a**n*np.sum(p*S - (r*RR + k*U + h*I))
         self.P[n] = P  # store P
 
@@ -367,26 +404,30 @@ class InvManagementMasterEnv(Simulation):
         return self.state, self.reward, self.done, {}
 
     def sample_action(self):
-        '''
+        """
         Generate an action by sampling from the action_space
-        '''
+        """
         return self.action_space_box.sample()
 
     def base_stock_action(self, z):
-        '''
+        """
         Sample action (number of units to request) based on a base-stock policy (order up to z policy)
         z = [integer list; dimension |Stages| - 1] base stock level (no inventory at the last stage)
-        '''
+        """
         n = self.period
         c = self.supply_capacity
         m = self.num_stages
-        IP = self._update_base_stock_policy_state()  # extract inventory position (current state)
+        IP = (
+            self._update_base_stock_policy_state()
+        )  # extract inventory position (current state)
 
         try:
             dimz = len(z)
         except:
             dimz = 1
-        assert dimz == m - 1, "Wrong dimension on base stock level vector. Should be # Stages - 1."
+        assert (
+            dimz == m - 1
+        ), "Wrong dimension on base stock level vector. Should be # Stages - 1."
 
         # calculate total inventory position at the beginning of period n
         R = z - IP  # replenishmet order to reach zopt
@@ -394,8 +435,12 @@ class InvManagementMasterEnv(Simulation):
         # check if R can actually be fulfilled (capacity and inventory constraints)
         Im1 = np.append(self.I[n, 1:], np.Inf)  # available inventory at the m+1 stage
         # NOTE: last stage has unlimited raw materials
-        Rpos = np.column_stack((np.zeros(len(R)), R))  # augmented materix to get replenishment only if positive
-        A = np.column_stack((c, np.max(Rpos, axis=1), Im1))  # augmented matrix with c, R, and I_m+1 as columns
+        Rpos = np.column_stack(
+            (np.zeros(len(R)), R)
+        )  # augmented materix to get replenishment only if positive
+        A = np.column_stack(
+            (c, np.max(Rpos, axis=1), Im1)
+        )  # augmented matrix with c, R, and I_m+1 as columns
 
         R = np.min(A, axis=1)  # replenishmet order to reach zopt (capacity constrained)
 
