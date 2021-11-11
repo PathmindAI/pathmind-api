@@ -1,0 +1,3 @@
+pathmind==0.3
+or-gym
+scipy
