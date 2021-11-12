@@ -15,6 +15,7 @@ from pathmind.simulation import from_gym
 PATH = pathlib.Path(__file__).parent.resolve()
 
 
+@pytest.mark.skip(reason="Removed policies")
 def test_single_mouse_rollout():
     simulation = MouseAndCheese()
     policy = Local(model_file=os.path.join(PATH, "examples/mouse_model"))
@@ -28,6 +29,7 @@ def test_single_mouse_rollout():
     assert actual.equals(expected)
 
 
+@pytest.mark.skip(reason="Removed policies")
 def test_multi_mouse_rollout():
     simulation = MultiMouseAndCheese()
     policy = Local(model_file=os.path.join(PATH, "examples/multi_mouse_model"))
