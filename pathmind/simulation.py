@@ -221,7 +221,7 @@ class Simulation:
               -F 'start=true' \
               -F 'multiAgent={multi_agent}' \
               -F 'obsSelection={obs_yaml}' \
-              https://api.pathmind.com/py/upload
+              https://api.dev.devpathmind.com/py/upload
             """
 
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)

@@ -8,6 +8,7 @@ import pandas as pd
 import pytest
 from examples.mouse.mouse_env_pathmind import MouseAndCheese
 from examples.mouse.multi_mouse_env_pathmind import MultiMouseAndCheese
+from examples.mouse.two_reward_mouse_env_pathmind import TwoRewardMouseAndCheese
 
 from pathmind.policy import Local, Random, Server
 from pathmind.simulation import from_gym
@@ -42,6 +43,11 @@ def test_random_single_mouse_rollout():
 
 def test_default_random_rollout():
     simulation = MouseAndCheese()
+    simulation.run()
+
+
+def test_two_reward_mouse_rollout():
+    simulation = TwoRewardMouseAndCheese()
     simulation.run()
 
 

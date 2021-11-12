@@ -5,10 +5,16 @@ from examples.mouse.mouse_env_pathmind import MouseAndCheese
 from examples.mouse.multi_mouse_env_pathmind import MultiMouseAndCheese
 
 from pathmind.simulation import from_gym
+from tests.examples.mouse.two_reward_mouse_env_pathmind import TwoRewardMouseAndCheese
 
 
 def test_training():
     simulation = MouseAndCheese()
+    simulation.train()
+
+
+def test_two_reward_training():
+    simulation = TwoRewardMouseAndCheese()
     simulation.train()
 
 
