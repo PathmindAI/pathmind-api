@@ -59,7 +59,14 @@ def test_server_single_mouse_rollout():
         url="https://api.dev.devpathmind.com/policy/id7060",
         api_key="a90c01ad-8239-432c-9ebc-c79a79c41a07",
     )
-    simulation.run(policy)
+    simulation.run(policy, num_episodes=10, summary_csv="summary.csv")
+    actual = pd.read_csv("summary.csv")
+    d = {
+        "Episode": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+        "reward_0_found_cheese": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    }
+    expected = pd.DataFrame(data=d)
+    assert actual.equals(expected)
 
 
 def test_server_multi_mouse_rollout():
