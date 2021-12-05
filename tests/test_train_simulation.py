@@ -12,8 +12,8 @@ def test_training():
     simulation.train()
 
 
+@pytest.mark.xfail(reason="Multi-agent hasn't been released to prod yet")
 def test_multi_training():
-    pytest.skip("Needs multi-agent training to work on web app")
     simulation = MultiMouseAndCheese()
     simulation.train()
 
